@@ -1,6 +1,6 @@
 # MatPlotLim
 A Program to plot kinematic data
 
-# Data Structure
+# Data Structures
 ## Branch by Nate
 

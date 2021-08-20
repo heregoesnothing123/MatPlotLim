@@ -7,7 +7,7 @@ The preamble is a section at the beginning of a CSV dataset that defines the inf
 A preamble has four sections
 
 Section | Name and Description | Number of lines 
------- | ------ | ------ | ------
+------ | ------ | ------
 1 | Preamble Tag and Dataset Description | 1 
 2 | Number of Non-Data Columns in Dataset | 1
 3 | Column Names | Number of lines should match the value of section 2

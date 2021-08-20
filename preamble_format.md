@@ -1,9 +1,9 @@
-#Preamble Format
+# Preamble Format
 
-##What is the preamble?
+## What is the preamble?
 The preamble is a section at the beginning of a CSV dataset that defines the information in the dataset. It defines the names of each point of data, the units, and the sign convention.
 
-##Format of the preamble
+## Format of the preamble
 A preamble has four sections
 
 Section | Name and Description | Number of lines 
@@ -14,7 +14,7 @@ Section | Name and Description | Number of lines
 4 | Units | 1
 5 | Sign | 1
 
-###Section 1
+### Section 1
 Section 1 is a single line with the following format:
 
 '''[preamble],DatasetDescription'''

@@ -251,7 +251,7 @@ class KinematicDataset:
 		for k in to_remove:
 			self.dataset.remove(k)
 			
-	def retreive(self, hsh):
+	def retrieve(self, hsh):
 		for i in self.dataset:
 			if i['md5'] == hsh:
 				return i
@@ -278,5 +278,7 @@ class KinematicDataset:
 				el['Data'] = (el['Data'] * 180.00) / np.pi 
 				el['Units'] = 'Degrees'
 		self.rehash()
+		
+
 		
 	

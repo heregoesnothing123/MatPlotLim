@@ -88,7 +88,72 @@ def _average_elements_by_hash(dset, list_of_hashes):
 			newelement[c] == ""
 			
 	dset.add_element(newelement)
+
+def get_matching_elements(dset, hash):
+		#given one element, this algorithm will return the hashes of elements that describe the same run with different motions
+		
+		#These are the columns that must match
+		matching_columns = ['SpecimenNumber','TrialRun','ParentSegment','ChildSegment','Condition']
+		d = dset.copy()
+		element_to_match = d.retrieve(hash)
+		d.remove(hash) #so we don't get a duplicate	
+		keep_element = 1
+		matching_elements = []
+		matching_elements.append(hash)
+		
+		for el in d:
+			for i in matching_columns:
+				if el[i] != element_to_match[i]:
+					keep_element *= 0
+			if keep_element == 1:
+				matching_elements.append(el['md5'])
+				
+		return matching_elements
+		
+def total_rotation(dset, hash):
+	#you need hashes from matching data in all three planes
+	hash_set = get_matching_elements(dset, hash)
+	elements = []
+	for h in hash_set:
+		elements.append(dset.retrieve(h))
+		#this is where hashing isn't great. converting from deg to rad means changing the hash
+		assert (elements[-1]['Units'] == 'Radians'),'Units must be in radians'
+		assert (elements[-1]['Motion'] != 'TotalRotation'), 'TrailRun has already been calculated'
+		dset.remove(h)
 	
-
-
-def total_rotational_distance(dset, list_of_xyz_hashes):
+	n = elements[0]['Data'].size
+	
+	#sum of squares using elementwise math
+	
+	#square each element
+	for e in elements:
+		np.square(e['Data'],out=e['Data'])
+	
+	#sum the squares by element
+	result_array = np.zeros(elements[0]['Data'].shape,dtype=np.longdouble)
+	for i in range(0,len(elements)):
+		np.add(result_array,elements[i]['Data'],out=result_array)
+	
+	#square root for magnitude
+	np.sqrt(result_array)
+	
+	result_element = {}
+	
+	matching_columns = ['SpecimenNumber','TrialRun','ParentSegment','ChildSegment','Condition','Units']
+	for k in matching_columns:
+		result_element[k] = elements[0][k]
+	
+	result_element['Signs'] = 'AbsoluteValue'
+	result_element['Motion'] = 'TotalRotation'
+	
+	dset.add_element(result_element)
+	
+def total_distance(dset, hash):
+#not working. I screwed up distance calculation
+	el = retrieve(hash)
+	assert (el['Motion'] == 'TotalRotation'),'Element is not a representation of magnitude of rotation'
+	
+	accumulator = np.longdouble(0.0)
+	
+	for i in range(1,el['Data'].size)
+		accumulator += (el['Data'][i]

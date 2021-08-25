@@ -75,7 +75,19 @@ class KinematicDataset:
 				currentrow[self.column_names[i][0]] = line.pop(0).strip()
 				
 				if len(self.column_names[i]) > 1: #if the descriptor had more than one element for this column
-					currentrow[self.column_names[i][0]] = self.column_names[i][int(currentrow[self.column_names[i][0]])]  #then set the title to this number
+					encoded_item = currentrow[self.column_names[i][0]]
+					currentrow[self.column_names[i][0]] = self.column_names[i][int(encoded_item)]  #then set the title to this number
+			
+			temp_unit = ""
+			temp_sign = ""
+			for i in currentrow:
+				if currentrow[i] in self.units:
+					temp_unit = self.units[currentrow[i]]
+				if currentrow[i] in self.signs:
+					temp_sign = self.signs[currentrow[i]]
+			
+			currentrow['Units'] = temp_unit
+			currentrow['Signs'] = temp_sign
 			
 			numeric_data =[]
 			for n in line:
@@ -85,7 +97,7 @@ class KinematicDataset:
 			currentrow['Data'] = np.asarray(numeric_data, np.longdouble)
 			
 			self.dataset.append(currentrow)
-			
+		
 		#strip out encoding information so column names are each one dimension
 		temp = []
 		for i in range(0,len(self.column_names)):
@@ -184,7 +196,6 @@ class KinematicDataset:
 			del self.units[j]
 			
 		#now do signs
-		
 		count_conditions = {}
 		
 		cond = list(self.signs.keys())
@@ -227,13 +238,7 @@ class KinematicDataset:
 		#Since the first time we run, there's no 'md5' key with the hash, after we run the hash would be different
 		
 		for element in self.dataset:
-			new_element = element.copy()
-			try:
-				del new_element['md5']  #prevents throwing an exception if we haven't hashed yet
-			except KeyError:
-				pass
-
-			hsh = str(hashlib.md5(str(new_element).encode()).hexdigest())
+			hsh = str(hashlib.md5(str(element['Data']).encode()).hexdigest())
 			element['md5'] = hsh
 	
 	def remove(self, hsh):
@@ -251,4 +256,27 @@ class KinematicDataset:
 			if i['md5'] == hsh:
 				return i
 				
+	def add_element(self, el):
+
+		hsh = str(hashlib.md5(str(el['Data']).encode()).hexdigest())
+		el['md5'] = hsh
 		
+		self.dataset.append(el)
+
+	def convert_to_rad(self):
+		#convert all degrees to radians
+		for el in self.dataset:
+			if el['Units'] == 'Degrees':
+				el['Data'] = (el['Data'] * np.pi) / 180.00 
+				el['Units'] = 'Radians'
+		self.rehash()
+	
+	def convert_to_deg(self):
+		#convert all radians to degrees
+		for el in self.dataset:
+			if el['Units'] == 'Radians':
+				el['Data'] = (el['Data'] * 180.00) / np.pi 
+				el['Units'] = 'Degrees'
+		self.rehash()
+		
+	

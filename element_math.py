@@ -42,10 +42,11 @@ def average_dataset(dset):
 	#now we have a 2D list, each item of the list is a list of the hashes of elements where everything matches except the trialrun (and actual data and hash).
 	
 	for group in matching_elements:
-		self.__average_elements_by_hash(d, group)
+		dset.average_elements_by_hash(d, group)
 	
-def __average_elements_by_hash(dset, list_of_hashes):
+def _average_elements_by_hash(dset, list_of_hashes):
 	#in place transformation, removes the input hashes
+	#underscore in front of function is Python suggestion to other programmers that you aren't supposed to directly call this function
 	
 	elements = []
 	
@@ -55,15 +56,17 @@ def __average_elements_by_hash(dset, list_of_hashes):
 	#get the elements that correspond to the input hashes
 	for h in list_of_hashes:
 		elements.append(dset.retrieve(h))
+		dset.remove(h)
 		
 	newlist = []
 
+	#make numpy array of zeros that is same dimension as one of the datasets (will crash if elements don't match size)
 	result_array = np.zeros(elements[0]['Data'].shape,dtype=np.longdouble)
 	
 	N = len(elements)
 	
 	for i in range(0,len(elements)):
-		np.add(result_array,elements[i]['Data'],out=result_array) #i hope I can output result into one of the operands
+		np.add(result_array,elements[i]['Data'],out=result_array) #i hope I can do an inplace by setting result to be one of the inputs
 		
 	result_array = result_array / N
 
@@ -72,6 +75,8 @@ def __average_elements_by_hash(dset, list_of_hashes):
 	#now iterate over the columns
 	col = dset.columns()
 	
+	#this code sets the averaged data element descriptive columns. If all elements that went into the average match, then set this element
+	#descriptive columns to match. If they don't all match, leave it blank.
 	for c in col:
 		match = 1
 		for i in range(0,len(elements)-1):
@@ -81,10 +86,9 @@ def __average_elements_by_hash(dset, list_of_hashes):
 			newelement[c] == elements[0][c]
 		else:
 			newelement[c] == ""
+			
+	dset.add_element(newelement)
 	
-	return newelement
-	
-#end
-	
-	
-	
+
+
+def total_rotational_distance(dset, list_of_xyz_hashes):

@@ -78,5 +78,7 @@ def average_elements_by_hash(dset, list_of_hashes):
 	
 	return newelement
 	
+#end
+	
 	
 	

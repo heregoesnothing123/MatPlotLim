@@ -94,6 +94,10 @@ class KinematicDataset:
 		
 		#temp class instance to return
 		x = KinematicDataset()
+		#note: we have to use copy() to get a value copy and not simply have both instances point to a single object
+		x.column_names = self.column_names.copy()
+		x.units = self.units.copy()
+		x.signs = self.signs.copy()
 		
 		for i in self.dataset:
 			keep_element = 1
@@ -105,6 +109,8 @@ class KinematicDataset:
 		newdesc = ": Filtered where " + filter_column + " = " + filter_string + " "
 		x.description = self.description + newdesc
 		
+		x.__update_units()
+		
 		return x
 	#end filter
 		
@@ -113,6 +119,9 @@ class KinematicDataset:
 		
 		#temp class instance to return
 		x = KinematicDataset()
+		x.column_names = self.column_names[:]
+		x.units = self.units.deepcopy()
+		x.signs = self.signs.deepcopy()
 		
 		for i in self.dataset:
 			keep_element = 1
@@ -123,6 +132,8 @@ class KinematicDataset:
 		#update the description
 		newdesc = ": Removed elements where " + filter_column + " = " + filter_string + " "
 		x.description = self.description + newdesc
+		
+		x.__update_units()
 		
 		return x
 	#end remove
@@ -151,5 +162,57 @@ class KinematicDataset:
 		#These lines will only return if the unit is not found. Print statement for debugging.
 		print("Sign not found. Signs in class: " + str(self.signs) + " and keys to dataset item are: " + str(list(self.dataset[data_item_number].keys())))
 		raise LookupError("Signs not configured correctly")	
+	
+	def __update_units(self):
+	#double underscore marks a method as private. cannot be accessed outside of another class method.
+	#this method updates the units dictionary. After filtering, a particular motion may not exist anymore (for example a file with coronal plane rotation and anterior posterior translation, after filtering for AP, will no longer contain rotation)
+	
+	#get a list of conditions, and remove any that no longer are referenced. In self.units, conditions are keys (and units are values), but in self.dataset, the key is the column and the value is the condition.
+	
+		count_conditions = {}
 		
-						
+		cond = list(self.units.keys())
+		
+		for c in cond:
+			count_conditions[c] = 0 #initialize the counter as an int
+		
+		#iterate over each element (which is a dictionary)
+		for element in self.dataset:
+			#iterate over each condition
+			for i in cond:
+				if i in element.values():   #if that condition exists in this element
+					count_conditions[i] += 1
+		
+		items_to_delete = []
+		
+		for k in count_conditions:
+			if count_conditions[k] == 0:
+				items_to_delete.append(k)
+		
+		for j in items_to_delete:
+			del self.units[j]
+			
+		#now do signs
+		
+		count_conditions = {}
+		
+		cond = list(self.signs.keys())
+		
+		for c in cond:
+			count_conditions[c] = 0 #initialize the counter as an int
+		
+		#iterate over each element (which is a dictionary)
+		for element in self.dataset:
+			#iterate over each condition
+			for i in cond:
+				if i in element.values():   #if that condition exists in this element
+					count_conditions[i] += 1
+		
+		items_to_delete = []
+		
+		for k in count_conditions:
+			if count_conditions[k] == 0:
+				items_to_delete.append(k)
+		
+		for j in items_to_delete:
+			del self.signs[j]			

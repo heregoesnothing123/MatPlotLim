@@ -1,4 +1,5 @@
 #File handling for the Kinematic Data
+import hashlib #needed to give each element a uniqueID
 
 class KinematicDataset:
 
@@ -87,6 +88,8 @@ class KinematicDataset:
 			temp.append(self.column_names[i][0])
 		self.column_names = temp
 		
+		self.rehash()
+		
 	#end of construct_from_file
 	
 	def filter(self, filter_column, filter_string):
@@ -119,9 +122,9 @@ class KinematicDataset:
 		
 		#temp class instance to return
 		x = KinematicDataset()
-		x.column_names = self.column_names[:]
-		x.units = self.units.deepcopy()
-		x.signs = self.signs.deepcopy()
+		x.column_names = self.column_names.copy()
+		x.units = self.units.copy()
+		x.signs = self.signs.copy()
 		
 		for i in self.dataset:
 			keep_element = 1
@@ -215,4 +218,40 @@ class KinematicDataset:
 				items_to_delete.append(k)
 		
 		for j in items_to_delete:
-			del self.signs[j]			
+			del self.signs[j]
+
+	def __copy__(self):
+		x = KinematicDataset()
+		x.column_names = self.column_names.copy()
+		x.units = self.units.deepcopy()
+		x.signs = self.signs.deepcopy()
+		
+		for i in self.dataset:
+			x.dataset.append(i)
+					
+		#update the description
+		x.description = self.description
+		return x
+
+	def rehash(self):
+		#hash each element in the dictionary so each has a unique ID that is consistent
+		for element in self.dataset:
+			hsh = str(hashlib.md5(str(element).encode()).hexdigest())
+			element['md5'] = hsh
+	
+	def remove(self, hsh):
+		to_remove = []
+		
+		for i in self.dataset:
+			if i['md5'] == hsh:
+				to_remove.append(i) #can't edit an iteratable while you're iterating
+		
+		for k in to_remove:
+			self.dataset.remove(k)
+			
+	def retreive(self, hsh):
+		for i in self.dataset:
+			if i['md5'] == hsh:
+				return i
+				
+		

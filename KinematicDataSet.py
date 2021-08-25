@@ -1,5 +1,8 @@
 #File handling for the Kinematic Data
 import hashlib #needed to give each element a uniqueID
+import numpy as np
+import warnings
+warnings.simplefilter(action='ignore',category=FutureWarning) #this to supress a numpy complaint.
 
 class KinematicDataset:
 
@@ -76,9 +79,10 @@ class KinematicDataset:
 			
 			numeric_data =[]
 			for n in line:
-				numeric_data.append(float(n.strip()))
-				
-			currentrow['Data'] = numeric_data
+				#import as list of strings and strip whitespace
+				numeric_data.append(n.strip())
+			
+			currentrow['Data'] = np.asarray(numeric_data, np.longdouble)
 			
 			self.dataset.append(currentrow)
 			
@@ -92,8 +96,8 @@ class KinematicDataset:
 		
 	#end of construct_from_file
 	
-	def filter(self, filter_column, filter_string):
-		#will return a dataset that contains only the filter criteria
+	def filter(self, filter_column, filter_string, keep=True):
+		#will return a dataset that contains only the filter criteria if 'keep' is true. Will return the opposite if it is false.
 		
 		#temp class instance to return
 		x = KinematicDataset()
@@ -102,14 +106,23 @@ class KinematicDataset:
 		x.units = self.units.copy()
 		x.signs = self.signs.copy()
 		
-		for i in self.dataset:
-			keep_element = 1
-			if filter_column in i: #if the column to filter exists in this dataset element as a key...
-				if i[filter_column] == filter_string: #check that key to see if it matches the filter
-					x.dataset.append(i)
+		if keep == True:
+			action = "Kept"
+			for i in self.dataset:
+				keep_element = 1
+				if filter_column in i: #if the column to filter exists in this dataset element as a key...
+					if i[filter_column] == filter_string: #check that key to see if it matches the filter
+						x.dataset.append(i)
+		else:
+			action = "Removed"
+			for i in self.dataset:
+				keep_element = 1
+				if filter_column in i: #if the column to filter exists in this data element as a key...
+					if i[filter_column] != filter_string: #check that key to see if it DOES NOT match the filter
+						x.dataset.append(i)
 		
 		#update the description
-		newdesc = ": Filtered where " + filter_column + " = " + filter_string + " "
+		newdesc = ": " + action + " where " + filter_column + " = " + filter_string + " "
 		x.description = self.description + newdesc
 		
 		x.__update_units()
@@ -117,43 +130,18 @@ class KinematicDataset:
 		return x
 	#end filter
 		
-	def remove(self, filter_column, filter_string):
-		#will return a dataset that removes the filter criteria
-		
-		#temp class instance to return
-		x = KinematicDataset()
-		x.column_names = self.column_names.copy()
-		x.units = self.units.copy()
-		x.signs = self.signs.copy()
-		
-		for i in self.dataset:
-			keep_element = 1
-			if filter_column in i: #if the column to filter exists in this data element as a key...
-				if i[filter_column] != filter_string: #check that key to see if it DOES NOT match the filter
-					x.dataset.append(i)
-					
-		#update the description
-		newdesc = ": Removed elements where " + filter_column + " = " + filter_string + " "
-		x.description = self.description + newdesc
-		
-		x.__update_units()
-		
-		return x
-	#end remove
-		
 	def columns(self):
 		return list(self.dataset[0].keys())
 		
 	def get_units(self, data_item_number):
-		#this is a very unique thing to python. iterating a dictionary iterates over the keys.
+		#Iterating a dictionary iterates over the keys.
 		#this for loop should return the keys to the units dictionary one by one.
 		for u in self.units:
 			if u in self.dataset[data_item_number].values(): #checks to see if the KEY in units matches a VALUE in this dataset item
 				return self.units[u]  #return the unit value to this key
 		
-		#These lines will only return if the unit is not found. Print statement for debugging.
-		print("Unit not found. Units in class: " + str(self.units) + " and keys to dataset item are: " + str(list(self.dataset[data_item_number].keys())))
-		raise LookupError("Units not configured correctly")
+		#This line will only run if the unit is not found.
+		raise LookupError("Unit not configured correctly")
 		
 	def get_sign(self, data_item_number):
 		#this is a very unique thing to python. iterating a dictionary iterates over the keys.
@@ -162,9 +150,7 @@ class KinematicDataset:
 			if u in self.dataset[data_item_number].values(): #checks to see if this key exists in this dataset item
 				return self.signs[u]  #return the sign value (what is positive) to this key
 		
-		#These lines will only return if the unit is not found. Print statement for debugging.
-		print("Sign not found. Signs in class: " + str(self.signs) + " and keys to dataset item are: " + str(list(self.dataset[data_item_number].keys())))
-		raise LookupError("Signs not configured correctly")	
+		raise LookupError("Sign not configured correctly")	
 	
 	def __update_units(self):
 	#double underscore marks a method as private. cannot be accessed outside of another class method.
@@ -172,6 +158,7 @@ class KinematicDataset:
 	
 	#get a list of conditions, and remove any that no longer are referenced. In self.units, conditions are keys (and units are values), but in self.dataset, the key is the column and the value is the condition.
 	
+		#this variable is a dictionary. They key is the unit, and the value is an int count of how many times it occurs in the dataset.
 		count_conditions = {}
 		
 		cond = list(self.units.keys())
@@ -184,6 +171,7 @@ class KinematicDataset:
 			#iterate over each condition
 			for i in cond:
 				if i in element.values():   #if that condition exists in this element
+				#note, numpy complains about this line since a numpy array is one of the values. It's OK though, we don't ever actually compare the numpy array.
 					count_conditions[i] += 1
 		
 		items_to_delete = []
@@ -235,8 +223,17 @@ class KinematicDataset:
 
 	def rehash(self):
 		#hash each element in the dictionary so each has a unique ID that is consistent
+		
+		#Since the first time we run, there's no 'md5' key with the hash, after we run the hash would be different
+		
 		for element in self.dataset:
-			hsh = str(hashlib.md5(str(element).encode()).hexdigest())
+			new_element = element.copy()
+			try:
+				del new_element['md5']  #prevents throwing an exception if we haven't hashed yet
+			except KeyError:
+				pass
+
+			hsh = str(hashlib.md5(str(new_element).encode()).hexdigest())
 			element['md5'] = hsh
 	
 	def remove(self, hsh):

@@ -1,5 +1,8 @@
 #contains range of motion functions
 from KinematicDataset import *
+import numpy as np
+import scipy as sp
+
 
 def average_dataset(dset):
 	'''Transforms dataset by averaging everything that matches except for run ID'''
@@ -39,29 +42,32 @@ def average_dataset(dset):
 	#now we have a 2D list, each item of the list is a list of the hashes of elements where everything matches except the trialrun (and actual data and hash).
 	
 	for group in matching_elements:
-		average_elements_by_hash(d, group)
+		self.__average_elements_by_hash(d, group)
 	
-def average_elements_by_hash(dset, list_of_hashes):
-	#in place transformation
+def __average_elements_by_hash(dset, list_of_hashes):
+	#in place transformation, removes the input hashes
 	
 	elements = []
 	
+	#dictionary containing the average result
 	newelement = {}
 	
+	#get the elements that correspond to the input hashes
 	for h in list_of_hashes:
 		elements.append(dset.retrieve(h))
 		
 	newlist = []
-		
-	for i in range(0,len(elements[0]['Data'])):
-		n = len(elements)
-		newdata = 0
-		for j in elements:
-			newdata += j['Data'][i]
-		newdata /= n #divide by number we are averaging
-		newlist.append(newdata)
 
-	newelement['Data'] = newlist
+	result_array = np.zeros(elements[0]['Data'].shape,dtype=np.longdouble)
+	
+	N = len(elements)
+	
+	for i in range(0,len(elements)):
+		np.add(result_array,elements[i]['Data'],out=result_array) #i hope I can output result into one of the operands
+		
+	result_array = result_array / N
+
+	newelement['Data'] = result_array
 	
 	#now iterate over the columns
 	col = dset.columns()

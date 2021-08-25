@@ -1,19 +1,10 @@
 #File handling for the Kinematic Data
 
-#Kinematic data files should have a "preamble" before the csv data, showing the structure of the data
-#Structure of the preamble:
-#1st line should be "[preamble]"
-#2nd line should be the number of non-data columns
-#The next n lines of the file should be the description of each non-data column, where n is the number in the 2nd line
-#Format for non-data column description in the preamble:
-#Descriptive name, Condition if this column is "1", Condition if this column is "2", etc (for encoded data).
-#If no comma is in the non-data column description, the descriptive name is the only thing recorded and no conditions are replaced.
-
 class KinematicDataset:
 
 	def __init__(self):
-		self.data = []
-		#the instance variable "data" is a list of dictionaries
+		self.dataset = []
+		#the instance variable "dataset" is a list of dictionaries
 		#dictionaries are defined by the preamble of the raw data
 		#Each non-data column will have a dictionary entry
 		self.column_names = []
@@ -88,7 +79,7 @@ class KinematicDataset:
 				
 			currentrow['Data'] = numeric_data
 			
-			self.data.append(currentrow)
+			self.dataset.append(currentrow)
 			
 		#strip out encoding information so column names are each one dimension
 		temp = []
@@ -104,11 +95,16 @@ class KinematicDataset:
 		#temp class instance to return
 		x = KinematicDataset()
 		
-		for i in self.data:
+		for i in self.dataset:
 			keep_element = 1
-			if filter_column in i: #if the column to filter exists in this data element as a key...
+			if filter_column in i: #if the column to filter exists in this dataset element as a key...
 				if i[filter_column] == filter_string: #check that key to see if it matches the filter
-					x.data.append(i)
+					x.dataset.append(i)
+		
+		#update the description
+		newdesc = ": Filtered where " + filter_column + " = " + filter_string + " "
+		x.description = self.description + newdesc
+		
 		return x
 	#end filter
 		
@@ -118,37 +114,42 @@ class KinematicDataset:
 		#temp class instance to return
 		x = KinematicDataset()
 		
-		for i in self.data:
+		for i in self.dataset:
 			keep_element = 1
 			if filter_column in i: #if the column to filter exists in this data element as a key...
 				if i[filter_column] != filter_string: #check that key to see if it DOES NOT match the filter
-					x.data.append(i)
+					x.dataset.append(i)
+					
+		#update the description
+		newdesc = ": Removed elements where " + filter_column + " = " + filter_string + " "
+		x.description = self.description + newdesc
+		
 		return x
 	#end remove
 		
 	def columns(self):
-		return list(self.data[0].keys())
+		return list(self.dataset[0].keys())
 		
 	def get_units(self, data_item_number):
 		#this is a very unique thing to python. iterating a dictionary iterates over the keys.
 		#this for loop should return the keys to the units dictionary one by one.
 		for u in self.units:
-			if u in self.data[data_item_number].values(): #checks to see if the KEY in units matches a VALUE in this data item
+			if u in self.dataset[data_item_number].values(): #checks to see if the KEY in units matches a VALUE in this dataset item
 				return self.units[u]  #return the unit value to this key
 		
 		#These lines will only return if the unit is not found. Print statement for debugging.
-		print("Unit not found. Units in class: " + str(self.units) + " and keys to data item are: " + str(list(self.data[data_item_number].keys())))
+		print("Unit not found. Units in class: " + str(self.units) + " and keys to dataset item are: " + str(list(self.dataset[data_item_number].keys())))
 		raise LookupError("Units not configured correctly")
 		
 	def get_sign(self, data_item_number):
 		#this is a very unique thing to python. iterating a dictionary iterates over the keys.
 		#this for loop should return the keys to the signs dictionary one by one.
 		for u in self.signs:
-			if u in self.data[data_item_number].values(): #checks to see if this key exists in this data item
+			if u in self.dataset[data_item_number].values(): #checks to see if this key exists in this dataset item
 				return self.signs[u]  #return the sign value (what is positive) to this key
 		
 		#These lines will only return if the unit is not found. Print statement for debugging.
-		print("Sign not found. Signs in class: " + str(self.signs) + " and keys to data item are: " + str(list(self.data[data_item_number].keys())))
+		print("Sign not found. Signs in class: " + str(self.signs) + " and keys to dataset item are: " + str(list(self.dataset[data_item_number].keys())))
 		raise LookupError("Signs not configured correctly")	
 		
 						

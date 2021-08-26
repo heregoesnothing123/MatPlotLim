@@ -3,6 +3,7 @@ import hashlib #needed to give each element a uniqueID
 import numpy as np
 import warnings
 warnings.simplefilter(action='ignore',category=FutureWarning) #this to supress a numpy complaint.
+from copy import copy, deepcopy
 
 class KinematicDataset:
 
@@ -222,8 +223,8 @@ class KinematicDataset:
 	def __copy__(self):
 		x = KinematicDataset()
 		x.column_names = self.column_names.copy()
-		x.units = self.units.deepcopy()
-		x.signs = self.signs.deepcopy()
+		x.units = self.units.copy()
+		x.signs = self.signs.copy()
 		
 		for i in self.dataset:
 			x.dataset.append(i)
@@ -254,7 +255,7 @@ class KinematicDataset:
 	def retrieve(self, hsh):
 		for i in self.dataset:
 			if i['md5'] == hsh:
-				return i
+				return deepcopy(i)
 				
 	def add_element(self, el):
 

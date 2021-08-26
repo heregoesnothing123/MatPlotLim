@@ -1,4 +1,4 @@
-from KinematicDataSet import *
+from kinematicdataSet import *
 #Testing program for KinematicDataset
 
 #Test: Load prepared CSV file
@@ -45,10 +45,12 @@ print("\n\nTesting Units================")
 print("==================================================")
 print("All Units in dataset : " + str(test.units))
 print("Unit of element 35 : " + str(test.get_units(35)))
-temp = dict(test.dataset[35])
-del temp['Data']
-print(temp)
-
+print("\nTesting Filtering=================")
+filterdataset = test.filter('Motion','Axial')
+print("Original units : " + str(test.units))
+print("Units in filtered dataset : " + str(filterdataset.units))
+print("Signs : " + str(test.signs))
+print("Filtered Signs : " + str(filterdataset.signs))
 print("\n\nTesting Signs================")
 print("==================================================")
 print("All Signs in dataset : " + str(test.signs))

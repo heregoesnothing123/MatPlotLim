@@ -1,4 +1,4 @@
-from kinematicdataSet import *
+from kinematicdataset import *
 #Testing program for KinematicDataset
 
 #Test: Load prepared CSV file

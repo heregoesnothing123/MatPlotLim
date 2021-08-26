@@ -91,7 +91,11 @@ def get_matching_elements(dset, hash):
 		
 def total_rotation(dset, hash):
 	#you need hashes from matching data in all three planes
+	
+	#this is wrong!!! This one gets hashes of same condition with different runIDs!! We want to get the hashes of the same runID but different motions!!!!!!!! Fix this later!! Maybe write it as "get complementary elements??"
 	hash_set = get_matching_elements(dset, hash)
+	
+	
 	elements = []
 	for h in hash_set:
 		elements.append(dset.retrieve(h))

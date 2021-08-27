@@ -18,13 +18,11 @@ class KinematicDataset:
 		self.units = {}
 		self.signs = {}
 	
-	def construct_from_file(self, filename, directory="C:\kinematicdata"):
+	def construct_from_file(self, filename):
 	
 		#first, check for preamble to the data defining its formatting (see data preamble section)
 		
-		file = directory+'\\'+filename
-		
-		f = open(file,'r',encoding='utf-8-sig')
+		f = open(filename,'r',encoding='utf-8-sig')
 		
 		#Read what should be Section 1 of preamble
 		firstline = f.readline().split(',')

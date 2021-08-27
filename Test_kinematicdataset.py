@@ -1,4 +1,5 @@
 from kinematicdataset import *
+from element_math import *
 #Testing program for KinematicDataset
 
 #Test: Load prepared CSV file
@@ -55,3 +56,25 @@ print("\n\nTesting Signs================")
 print("==================================================")
 print("All Signs in dataset : " + str(test.signs))
 print("Sign (Direction positive) of element 35 : " + str(test.get_sign(35)))
+
+
+print("\n\nTesting Rescale================")
+print("==================================================")
+print("Datapoints in element 35 : " + str(test.dataset[35]['Data'].size))
+
+hsh = test.dataset[35]['md5']
+print("Range of element 35 : " + str(get_range(test,hsh)))
+
+test.rescale(hsh,48)
+#now it has new hash and is likely in a different place, so now we have to search for it
+sizes = []
+for e in test.dataset:
+	sz = int(e['Data'].size)
+	if sz not in sizes:
+		sizes.append(sz)
+	if sz == 48:
+		newhsh = e['md5']
+#one of these should match the chosen rescale size
+print("Datapoints in all elements after rescale : " + str(sizes))
+print("Range of element 35 after rescale: " + str(get_range(test,newhsh)))
+

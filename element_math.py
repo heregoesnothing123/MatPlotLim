@@ -70,6 +70,26 @@ def _average_elements_by_hash(dset, list_of_hashes):
 	dset.add_element(newelement)
 
 def get_matching_elements(dset, hash):
+	#given one element, this algorithm will return the hashes of elements that describe the same motions with different runs
+	
+	#These are the columns that must match
+	matching_columns = ['SpecimenNumber','ParentSegment','ChildSegment','Condition','Motion']
+	element_to_match = dset.retrieve(hash)
+	matching_elements = []
+	matching_elements.append(hash)
+	
+	for el in dset.dataset:
+		keep_element = 1
+		for i in matching_columns:
+			if el[i] != element_to_match[i]:
+				keep_element *= 0
+		if keep_element == 1:
+			if el['md5'] not in matching_elements:
+				matching_elements.append(el['md5'])
+			
+	return matching_elements
+	
+def get_complement_elements(dset, hash):
 	#given one element, this algorithm will return the hashes of elements that describe the same run with different motions
 	
 	#These are the columns that must match
@@ -87,14 +107,10 @@ def get_matching_elements(dset, hash):
 			if el['md5'] not in matching_elements:
 				matching_elements.append(el['md5'])
 			
-	return matching_elements
+	return matching_elements	
 		
-def total_rotation(dset, hash):
+def _total_rotation(dset, hash_set):
 	#you need hashes from matching data in all three planes
-	
-	#this is wrong!!! This one gets hashes of same condition with different runIDs!! We want to get the hashes of the same runID but different motions!!!!!!!! Fix this later!! Maybe write it as "get complementary elements??"
-	hash_set = get_matching_elements(dset, hash)
-	
 	
 	elements = []
 	for h in hash_set:
@@ -109,7 +125,10 @@ def total_rotation(dset, hash):
 	result_array = np.zeros(elements[0]['Data'].shape,dtype=np.longdouble)
 	
 	#possibly assert that elements has three.... elements. one for each plane of motion
-	for i in range(0,len(elements[0]['Data'].size)-1):
+	checkstring = str(elements[0]['Motion']) + " " + str(elements[1]['Motion']) + " " + str(elements[2]['Motion'])
+	
+	for i in range(0,elements[0]['Data'].size-1):
+
 		dim1 = elements[0]['Data'][i+1] - elements[0]['Data'][i]
 		dim2 = elements[1]['Data'][i+1] - elements[1]['Data'][i]
 		dim3 = elements[2]['Data'][i+1] - elements[2]['Data'][i]
@@ -140,7 +159,7 @@ def total_rotation(dset, hash):
 	
 	dset.add_element(result_element)
 	
-def total_distance(dset, hash):
+def _total_distance(dset, hash):
 
 	el = retrieve(hash)
 	assert (el['Motion'] == 'TotalRotation'),'Element is not magnitude of rotation format'
@@ -151,3 +170,28 @@ def total_distance(dset, hash):
 		accumulator += (el['Data'][i])
 		
 	return accumulator
+	
+def get_total_rotation(dset):
+	'''Transforms dataset by calculating how much specimen rotated'''
+	assert (isinstance(dset,KinematicDataset)),"Must pass KinematicDataset type to get_total_rotation function"
+	
+	#make a list of the distinct groups
+
+	complement_elements = []
+	
+	d = copy(dset)
+	
+	for e in dset.dataset:
+		m = get_complement_elements(d, e['md5'])
+		m.sort() #sorting will make it easier to remove duplicates
+		if m not in complement_elements:
+			complement_elements.append(m)
+	
+	for group in complement_elements:
+		_total_rotation(dset, group)
+
+def get_range(dset, hash):
+	el = dset.retrieve(hash)
+	max = np.amax(el['Data'])
+	min = np.amin(el['Data'])
+	return [max, min]

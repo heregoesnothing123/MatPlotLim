@@ -1,6 +1,7 @@
 #File handling for the Kinematic Data
 import hashlib #needed to give each element a uniqueID
 import numpy as np
+import scipy.interpolate
 import warnings
 warnings.simplefilter(action='ignore',category=FutureWarning) #this to supress a numpy complaint.
 from copy import copy, deepcopy
@@ -241,7 +242,7 @@ class KinematicDataset:
 		for element in self.dataset:
 			hsh = str(hashlib.md5(str(element['Data']).encode()).hexdigest())
 			element['md5'] = hsh
-	
+			
 	def remove(self, hsh):
 		to_remove = []
 		
@@ -279,7 +280,25 @@ class KinematicDataset:
 				el['Data'] = (el['Data'] * 180.00) / np.pi 
 				el['Units'] = 'Degrees'
 		self.rehash()
-		
-
-		
 	
+	def rescale(self, hsh, num_points, k='cubic'):
+		#changes the number of points in a given data element
+		el = self.retrieve(hsh)
+		
+		current_points = el['Data'].size
+		#this gives us sequential numbers from zero to size of the data minus 1
+		xval = np.linspace(1.0, current_points, num=current_points, dtype=np.longdouble)
+		
+		interp_function = scipy.interpolate.interp1d(xval, el['Data'], kind = k)
+		
+		new_xval = np.linspace(1.0, current_points, num=num_points, dtype=np.longdouble)
+		
+		new_yval = interp_function(new_xval)
+		
+		assert (int(new_yval.size) == int(num_points)),'rescale failure'
+		
+		el['Data'] = new_yval
+		
+		self.remove(hsh)
+		self.add_element(el)
+		

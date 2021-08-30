@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import filedialog as fd
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
@@ -28,10 +29,15 @@ class MatPlotLim:
 		y = [i ** 2 for i in range(101)]
 
 		self.plot1 = self.fig.add_subplot(111)
-		self.plot1.plot(y)
-		self.plot1.set_title('Chart Title')
-		self.plot1.set_ylabel('Y Label')
-		self.plot1.set_xlabel('X Label')
+		self.lineplot = self.plot1.plot(y)
+		
+		self.charttitle = "Chart Title"
+		self.xlabel = "X Label"
+		self.ylabel = "Y Label"
+		
+		self.plot1.set_title(self.charttitle)
+		self.plot1.set_ylabel(self.xlabel)
+		self.plot1.set_xlabel(self.ylabel)
 		self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
 		self.canvas.draw()
 		self.canvas.get_tk_widget().pack()
@@ -43,13 +49,15 @@ class MatPlotLim:
 		self.b0 = tk.Button(self.master, text = "Select Data", command = self.data_select)
 		self.b0.place(x=7, y=10)
 
-		self.b1 = tk.Button(self.master, text = "Plot", command = self.placeholder)
+		self.b1 = tk.Button(self.master, text = "Plot", command = self.plot_data)
 		self.b1.place(x=87, y=10)
 
 		self.b2 = tk.Button(self.master, text = "Translate", command = self.placeholder)
 		self.b2.place(x=7, y=40)
 
 		#inputs for translation
+		yloc = 70
+		
 		self.Var11 = tk.Text(self.master, height = 2, width = 4)
 		self.Var11.place(x=37, y=70)
 
@@ -74,9 +82,17 @@ class MatPlotLim:
 		self.UpdateGraph = tk.Button(self.master, text = "Update Graph", command = self.update_graph)
 		self.UpdateGraph.place(x=77, y=377)
 		
-		self.UpdateGraph = tk.Button(self.master, text = "Configure Dataset", command = self.data_window)
-		self.UpdateGraph.place(x=77, y=427)
-		self.UpdateGraph.configure(state='disabled')
+		#the button to launch the data import window. It needs to be disabled until a datafile is loaded.
+		self.data_config_btn = tk.Button(self.master, text = "Configure Dataset", command = self.data_window)
+		self.data_config_btn.place(x=77, y=427)
+		self.data_config_btn.configure(state='disabled')
+		
+		#the button to launch the graph setup window. It needs to be disabled until a datafile is loaded.
+		self.graph_config_btn = tk.Button(self.master, text = "Configure Graph", command = self.graph_window)
+		self.graph_config_btn.place(x=77, y=477)
+		self.graph_config_btn.configure(state='disabled')
+				
+		
 
 		#input theta for rotation
 
@@ -121,6 +137,9 @@ class MatPlotLim:
 		self.Var13.pack
 		
 		self.data_w = None
+		self.graph_w = None
+		
+		self.selected_elements=[]
 
 		
 	def placeholder(self):
@@ -140,24 +159,226 @@ class MatPlotLim:
 		fn = fd.askopenfilename(initialdir='C:\kinematicdata')
 		#tk.messagebox.showinfo("Debug",fn)
 		self.dset.construct_from_file(fn)
-		self.UpdateGraph.configure(state='normal')
+		self.data_config_btn.configure(state='normal')
+		self.graph_config_btn.configure(state='normal')
+		
 		
 	def data_window(self):
 
 		dat = self.dset.description
 
+		#we don't want to launch a new window if one exists
 		if self.data_w == None:
+			#the y-padding for this window
+			pdy = 2
+		
 			self.data_w = tk.Toplevel(self.master)
 			self.data_w.protocol("WM_DELETE_WINDOW", self.data_win_close)
-			self.data_w.geometry("600x200")
-			self.txt_desc_w = tk.Text(self.data_w, height = 3, width = 50 )
+			#self.data_w.geometry("600x200")
+			self.txt_desc_w = tk.Text(self.data_w, height = 2, width = 60 )
 			self.txt_desc_w.insert(tk.END,dat)
-			self.txt_desc_w.pack()
+			
+			self.txt_desc_w.grid(row=0, column = 1, columnspan = 3, sticky = tk.W + tk.E, pady = pdy)
+			
+			lab1 = tk.Label(self.data_w, text = "Data Description")
+			
+			lab1.grid(row=0, column = 0, columnspan = 1, sticky = tk.W, pady = pdy)
+			
+			self.filter_btn_w = tk.Button(self.data_w, text = "Filter Data", command = self.filter_data)
+			self.filter_btn_w.grid(row=1, column = 0, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+			
+			self.remove_btn_w = tk.Button(self.data_w, text = "Remove Data", command = self.remove_data)
+			self.remove_btn_w.grid(row=1, column = 1, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+			
+			self.txt_filter_column_w = tk.Text(self.data_w, height = 1)
+			self.txt_filter_column_w.insert(tk.END,"Filter Column")
+			self.self.txt_filter_column_w.bind("<Tab>",self.focus_next)
+			self.txt_filter_column_w.grid(row=1, column = 2, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+			
+			
+			self.txt_filter_text_w = tk.Text(self.data_w, height = 1)
+			self.txt_filter_text_w.insert(tk.END,"Filter Text")
+			self.self.txt_filter_column_w.bind("<Tab>",self.focus_next)
+			self.txt_filter_text_w.grid(row=1, column = 3, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+			
+			#this creates the data tree self.tree. Function for updating
+			self.draw_datatree()
+			
 		else:
-			self.data_w.show()
+			#this doesn't really work
+			#self.data_w.show()
+			pass
 	
+	def filter_data(self):
+		#gets the first line of the text box, omitting the final newline
+		fc = self.txt_filter_column_w.get("1.0",'end-1c')
+		ft = self.txt_filter_text_w.get("1.0",'end-1c')
+		
+		print(fc + ft)
+	
+		if fc == "Filter Column":
+			pass
+		else:
+			
+			self.dset = self.dset.filter(fc,ft)
+			self.draw_datatree()
+			#self.tree.update()
+			#self.data_w.update()
+		#do nothing yet!
+		pass
+		
+	def remove_data(self):
+		#do nothing yet!
+		pass
+		
+	def draw_datatree(self):
+			treecol = []
+			
+			for i in self.dset.columns():
+				if i != 'md5' and i != 'Data':
+					treecol.append(i)
+				
+			self.tree = ttk.Treeview(self.data_w, columns = treecol, show='headings', height = 30)
+			
+			for k in treecol:
+				self.tree.column(k, width=80)
+			
+			for c in treecol:
+				self.tree.heading(c, text=c)
+			
+			for e in self.dset.dataset:
+				emod = list(e.values())
+				self.tree.insert('',tk.END,values=emod)
+				
+			self.tree.grid(row=2, column = 0, columnspan = 5, sticky = 'nsew', pady = 2)
+			
+			treescrl = tk.Scrollbar(self.data_w, orient=tk.VERTICAL, command=self.tree.yview)
+			self.tree.configure(yscroll=treescrl.set)
+			treescrl.grid(row=2, column=4, sticky='ns')
+	
+	#if we close a window, the class still contains the window state. I don't know how to reshow the window, so instead we'll destroy the window so we can launch it again.
 	def data_win_close(self):
 		self.data_w.destroy()
 		self.data_w = None
 		
+	def graph_win_close(self):
+		self.graph_w.destroy()
+		self.graph_w = None
 		
+	def plot_data(self):
+		run = True
+		#clear the old graph
+		while run:
+			ln = self.lineplot.pop(0)
+			ln.remove()
+			if len(self.lineplot) == 0:
+				run = False
+	
+		#plot the new graph
+		for el in self.dset.dataset:
+			self.lineplot.append(self.plot1.plot(el['Data']))
+			
+		self.canvas.draw()
+		
+	def focus_next(event):
+		#this makes tab move to the next text field. Yes, it's that important to me.
+		event.widget.tk_focusNext().focus()
+		return("break")
+		
+	def graph_window(self):
+
+		dat = self.dset.description
+
+		#we don't want to launch a new window if one exists
+		if self.graph_w == None:
+		
+			#the y-padding for this window
+			pdy = 2
+		
+			self.graph_w = tk.Toplevel(self.master)
+			self.graph_w.protocol("WM_DELETE_WINDOW", self.graph_win_close)
+			#self.data_w.geometry("600x200")
+			self.g_txt_desc_w = tk.Text(self.graph_w, height = 2, width = 60 )
+			self.g_txt_desc_w.insert(tk.END,dat)
+			
+			self.txt_desc_w.grid(row=0, column = 1, columnspan = 3, sticky = tk.W + tk.E, pady = pdy)
+			
+			lab1 = tk.Label(self.data_w, text = "Data Description")
+			
+			lab1.grid(row=0, column = 0, columnspan = 1, sticky = tk.W, pady = pdy)
+			
+			self.filter_btn_w = tk.Button(self.data_w, text = "Filter Data", command = self.filter_data)
+			self.filter_btn_w.grid(row=1, column = 0, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+			
+			self.remove_btn_w = tk.Button(self.data_w, text = "Remove Data", command = self.remove_data)
+			self.remove_btn_w.grid(row=1, column = 1, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+			
+			self.txt_filter_column_w = tk.Text(self.data_w, height = 1)
+			self.txt_filter_column_w.insert(tk.END,"Filter Column")
+			self.self.txt_filter_column_w.bind("<Tab>",self.focus_next)
+			self.txt_filter_column_w.grid(row=1, column = 2, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+			
+			
+			self.txt_filter_text_w = tk.Text(self.data_w, height = 1)
+			self.txt_filter_text_w.insert(tk.END,"Filter Text")
+			self.self.txt_filter_column_w.bind("<Tab>",self.focus_next)
+			self.txt_filter_text_w.grid(row=1, column = 3, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+			
+			#this creates the data tree self.tree. Function for updating
+			self.draw_datatree()
+			
+		else:
+			#this doesn't really work
+			#self.data_w.show()
+			pass
+		
+	def draw_graphtree(self):
+			treecol = []
+			
+			for i in self.dset.columns():
+				if i != 'md5' and i != 'Data':
+					treecol.append(i)
+				
+			self.graphtree = ttk.Treeview(self.graph_w, columns = treecol, show='headings', height = 30)
+			
+			for k in treecol:
+				self.graphtree.column(k, width=80)
+			
+			for c in treecol:
+				self.graphtree.heading(c, text=c)
+			
+			for e in self.dset.dataset:
+				emod = list(e.values())
+				self.graphtree.insert('',tk.END,values=emod)
+				
+			self.graphtree.grid(row=2, column = 0, columnspan = 5, rowspan=3,sticky = 'nsew', pady = 2)
+			
+			treescrl = tk.Scrollbar(self.graph_w, orient=tk.VERTICAL, command=self.tree.yview)
+			self.graphtree.configure(yscroll=treescrl.set)
+			treescrl.grid(row=2, column=4, sticky='ns')
+
+	def draw_graphtree_selected(self):
+			
+			for i in self.selected_elements:
+				if i != 'md5' and i != 'Data':
+					treecol.append(i)
+				
+			self.graphtree = ttk.Treeview(self.graph_w, columns = treecol, show='headings', height = 30)
+			
+			for k in treecol:
+				self.graphtree.column(k, width=80)
+			
+			for c in treecol:
+				self.graphtree.heading(c, text=c)
+			
+			for e in self.dset.dataset:
+				emod = list(e.values())
+				self.graphtree.insert('',tk.END,values=emod)
+				
+			self.graphtree.grid(row=2, column = 0, columnspan = 5, rowspan=3,sticky = 'nsew', pady = 2)
+			
+			treescrl = tk.Scrollbar(self.graph_w, orient=tk.VERTICAL, command=self.tree.yview)
+			self.graphtree.configure(yscroll=treescrl.set)
+			treescrl.grid(row=2, column=4, sticky='ns')			
+			
+			

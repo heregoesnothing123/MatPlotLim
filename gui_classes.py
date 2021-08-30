@@ -26,9 +26,10 @@ class MatPlotLim:
 		self.fig = Figure(figsize=(11,10))
 		
 		#placeholder plot
-		y = [i ** 2 for i in range(101)]
+		y = [i ** 2 for i in range(30)]
 
 		self.plot1 = self.fig.add_subplot(111)
+		#self.fig.add_axes()
 		self.lineplot = self.plot1.plot(y)
 		
 		self.charttitle = "Chart Title"
@@ -92,8 +93,6 @@ class MatPlotLim:
 		self.graph_config_btn.place(x=77, y=477)
 		self.graph_config_btn.configure(state='disabled')
 				
-		
-
 		#input theta for rotation
 
 		self.Theta = tk.Text(self.master, height = 2, width = 4)
@@ -141,6 +140,15 @@ class MatPlotLim:
 		
 		self.selected_elements=[]
 
+		self.default_graph_properties = {}
+		#self.default_graph_properties['marker'] = 'o'
+		self.default_graph_properties['linestyle'] = 'solid'
+		self.default_graph_properties['linewidth'] = 3
+		#self.default_graph_properties['markersize'] = 12
+
+		self.color_index = 0
+		self.graph_range = []
+		self.ax_rect = []
 		
 	def placeholder(self):
 		#do nothing!
@@ -159,6 +167,12 @@ class MatPlotLim:
 		fn = fd.askopenfilename(initialdir='C:\kinematicdata')
 		#tk.messagebox.showinfo("Debug",fn)
 		self.dset.construct_from_file(fn)
+
+		#using dictionaries are great. We can add keys on the fly
+		for e in self.dset.dataset:
+			e['Color'] = "None"
+			e['Formatting'] = self.default_graph_properties
+			
 		self.data_config_btn.configure(state='normal')
 		self.graph_config_btn.configure(state='normal')
 		
@@ -192,13 +206,13 @@ class MatPlotLim:
 			
 			self.txt_filter_column_w = tk.Text(self.data_w, height = 1)
 			self.txt_filter_column_w.insert(tk.END,"Filter Column")
-			self.self.txt_filter_column_w.bind("<Tab>",self.focus_next)
+			self.txt_filter_column_w.bind("<Tab>",self.focus_next)
 			self.txt_filter_column_w.grid(row=1, column = 2, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
 			
 			
 			self.txt_filter_text_w = tk.Text(self.data_w, height = 1)
 			self.txt_filter_text_w.insert(tk.END,"Filter Text")
-			self.self.txt_filter_column_w.bind("<Tab>",self.focus_next)
+			self.txt_filter_column_w.bind("<Tab>",self.focus_next)
 			self.txt_filter_text_w.grid(row=1, column = 3, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
 			
 			#this creates the data tree self.tree. Function for updating
@@ -221,6 +235,7 @@ class MatPlotLim:
 		else:
 			
 			self.dset = self.dset.filter(fc,ft)
+			self.txt_desc_w.update()
 			self.draw_datatree()
 			#self.tree.update()
 			#self.data_w.update()
@@ -235,7 +250,7 @@ class MatPlotLim:
 			treecol = []
 			
 			for i in self.dset.columns():
-				if i != 'md5' and i != 'Data':
+				if i != 'md5' and i != 'Data' and i!= 'Color' and i!= 'Formatting':
 					treecol.append(i)
 				
 			self.tree = ttk.Treeview(self.data_w, columns = treecol, show='headings', height = 30)
@@ -274,9 +289,34 @@ class MatPlotLim:
 			if len(self.lineplot) == 0:
 				run = False
 	
+		num_elem = 0
 		#plot the new graph
 		for el in self.dset.dataset:
-			self.lineplot.append(self.plot1.plot(el['Data']))
+			#we only want to plot elements who's color values are not "None"
+			col = el['Color']
+			if col != "None":
+				if self.ax_rect == []:
+					self.graph_range.append(get_range(self.dset, el['md5']))
+				if num_elem < el['Data'].size:
+					num_elem = el['Data'].size
+				self.lineplot.append(self.plot1.plot(el['Data'], color=col, **self.default_graph_properties))
+
+		tempmax = self.graph_range[0][0]
+		tempmin = self.graph_range[0][1]
+
+		if len(self.graph_range) > 1:
+			for i in self.graph_range:
+				if tempmax < i[0]:
+					tempmax = i[0]
+				if tempmin > i[1]:
+					tempmin = i[1]
+		
+		self.ax_rect = [0.0, tempmin, num_elem, tempmax]
+		self.graph_range = []
+
+		self.graphaxes_x = self.plot1.set_xlim(self.ax_rect[0], self.ax_rect[2])
+		self.graphaxes_y = self.plot1.set_ylim(self.ax_rect[1], self.ax_rect[3])
+
 			
 		self.canvas.draw()
 		
@@ -298,34 +338,27 @@ class MatPlotLim:
 			self.graph_w = tk.Toplevel(self.master)
 			self.graph_w.protocol("WM_DELETE_WINDOW", self.graph_win_close)
 			#self.data_w.geometry("600x200")
-			self.g_txt_desc_w = tk.Text(self.graph_w, height = 2, width = 60 )
+			self.g_txt_desc_w = tk.Text(self.graph_w, height = 2, width = 80 )
 			self.g_txt_desc_w.insert(tk.END,dat)
 			
-			self.txt_desc_w.grid(row=0, column = 1, columnspan = 3, sticky = tk.W + tk.E, pady = pdy)
+			self.g_txt_desc_w.grid(row=0, column = 1, columnspan = 3, sticky = tk.W + tk.E, pady = pdy)
 			
-			lab1 = tk.Label(self.data_w, text = "Data Description")
+			lab1 = tk.Label(self.graph_w, text = "Data Description")
 			
 			lab1.grid(row=0, column = 0, columnspan = 1, sticky = tk.W, pady = pdy)
 			
-			self.filter_btn_w = tk.Button(self.data_w, text = "Filter Data", command = self.filter_data)
-			self.filter_btn_w.grid(row=1, column = 0, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+			self.addgroup_btn_w = tk.Button(self.graph_w, text = "Add Element to Plot", command = self.add_element)
+			self.addgroup_btn_w.grid(row=1, column = 0, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
 			
-			self.remove_btn_w = tk.Button(self.data_w, text = "Remove Data", command = self.remove_data)
-			self.remove_btn_w.grid(row=1, column = 1, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
-			
-			self.txt_filter_column_w = tk.Text(self.data_w, height = 1)
-			self.txt_filter_column_w.insert(tk.END,"Filter Column")
-			self.self.txt_filter_column_w.bind("<Tab>",self.focus_next)
-			self.txt_filter_column_w.grid(row=1, column = 2, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
-			
-			
-			self.txt_filter_text_w = tk.Text(self.data_w, height = 1)
-			self.txt_filter_text_w.insert(tk.END,"Filter Text")
-			self.self.txt_filter_column_w.bind("<Tab>",self.focus_next)
-			self.txt_filter_text_w.grid(row=1, column = 3, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+			self.graph_tkvar = tk.StringVar(self.graph_w)
+			self.color_options = ["Red", "Green", "Blue", "Black", "Yellow", "Orange", "Purple", "Grey", "Pink"]
+			self.graph_tkvar.set(self.color_options[self.color_index])
+
+			self.color_select = tk.OptionMenu(self.graph_w, self.graph_tkvar, *self.color_options)
+			self.color_select.grid(row=1, column = 1, columnspan = 2, sticky = tk.W + tk.E, pady = pdy)
 			
 			#this creates the data tree self.tree. Function for updating
-			self.draw_datatree()
+			self.draw_graphtree()
 			
 		else:
 			#this doesn't really work
@@ -338,47 +371,47 @@ class MatPlotLim:
 			for i in self.dset.columns():
 				if i != 'md5' and i != 'Data':
 					treecol.append(i)
-				
-			self.graphtree = ttk.Treeview(self.graph_w, columns = treecol, show='headings', height = 30)
-			
-			for k in treecol:
-				self.graphtree.column(k, width=80)
-			
-			for c in treecol:
-				self.graphtree.heading(c, text=c)
-			
-			for e in self.dset.dataset:
-				emod = list(e.values())
-				self.graphtree.insert('',tk.END,values=emod)
-				
-			self.graphtree.grid(row=2, column = 0, columnspan = 5, rowspan=3,sticky = 'nsew', pady = 2)
-			
-			treescrl = tk.Scrollbar(self.graph_w, orient=tk.VERTICAL, command=self.tree.yview)
-			self.graphtree.configure(yscroll=treescrl.set)
-			treescrl.grid(row=2, column=4, sticky='ns')
 
-	def draw_graphtree_selected(self):
-			
-			for i in self.selected_elements:
-				if i != 'md5' and i != 'Data':
-					treecol.append(i)
+			#tk.messagebox.showinfo("Debug",treecol)
 				
 			self.graphtree = ttk.Treeview(self.graph_w, columns = treecol, show='headings', height = 30)
 			
 			for k in treecol:
-				self.graphtree.column(k, width=80)
+				self.graphtree.column(k, width=60)
 			
 			for c in treecol:
 				self.graphtree.heading(c, text=c)
 			
 			for e in self.dset.dataset:
-				emod = list(e.values())
-				self.graphtree.insert('',tk.END,values=emod)
+				emod = []
+				for c in treecol:
+					emod.append(e[c])
+				self.graphtree.insert('',tk.END,values=emod, iid=e['md5'])
 				
-			self.graphtree.grid(row=2, column = 0, columnspan = 5, rowspan=3,sticky = 'nsew', pady = 2)
+			self.graphtree.grid(row=2, column = 0, columnspan = 5,sticky = 'nsew', pady = 2)
 			
 			treescrl = tk.Scrollbar(self.graph_w, orient=tk.VERTICAL, command=self.tree.yview)
 			self.graphtree.configure(yscroll=treescrl.set)
-			treescrl.grid(row=2, column=4, sticky='ns')			
-			
-			
+			treescrl.grid(row=2, column=5, sticky='ns')
+
+			self.graph_tkvar.set(self.color_options[self.color_index])
+			#next time a different default color! Magic!
+			self.color_index += 1
+
+
+	def add_element(self):
+		
+		for i in self.graphtree.selection():
+			self.selected_elements.append(i)
+			element = self.dset.retrieve(i)
+			element['Color'] = self.graph_tkvar.get()
+			self.dset.remove(i)
+			self.dset.add_element(element)
+
+		
+		print(self.selected_elements)
+
+		self.draw_graphtree()
+
+		pass
+		#this will be to place highlihgted tree item on plotting list

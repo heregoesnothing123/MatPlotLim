@@ -111,6 +111,10 @@ class KinematicDataset:
 	def filter(self, filter_column, filter_string, keep=True):
 		#will return a dataset that contains only the filter criteria if 'keep' is true. Will return the opposite if it is false.
 		
+		#prevents crashign if filter column not found
+		if filter_column not in self.columns():
+			return copy(self)
+
 		#temp class instance to return
 		x = KinematicDataset()
 		#note: we have to use copy() to get a value copy and not simply have both instances point to a single object
@@ -132,12 +136,18 @@ class KinematicDataset:
 				if filter_column in i: #if the column to filter exists in this data element as a key...
 					if i[filter_column] != filter_string: #check that key to see if it DOES NOT match the filter
 						x.dataset.append(i)
+
+		if len(x.dataset) < 1:
+			#filtering went wrong. Prevent crashes
+			return copy(self)
 		
 		#update the description
 		newdesc = ": " + action + " where " + filter_column + " = " + filter_string + " "
 		x.description = self.description + newdesc
 		
 		x.__update_units()
+
+
 		
 		return x
 	#end filter
@@ -226,10 +236,10 @@ class KinematicDataset:
 		x.signs = self.signs.copy()
 		
 		for i in self.dataset:
-			x.dataset.append(i)
+			x.dataset.append(copy(i))
 					
 		#update the description
-		x.description = self.description
+		x.description = copy(self.description)
 		return x
 
 	def rehash(self):

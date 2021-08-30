@@ -161,7 +161,7 @@ def _total_rotation(dset, hash_set):
 	
 def _total_distance(dset, hash):
 
-	el = retrieve(hash)
+	el = dset.retrieve(hash)
 	assert (el['Motion'] == 'TotalRotation'),'Element is not magnitude of rotation format'
 	
 	accumulator = np.longdouble(0.0)

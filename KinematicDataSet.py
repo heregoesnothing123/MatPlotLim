@@ -255,9 +255,11 @@ class KinematicDataset:
 		to_remove = []
 		
 		for i in self.dataset:
+
 			if i['md5'] == hsh:
 				to_remove.append(i) #can't edit an iteratable while you're iterating
 		
+
 		for k in to_remove:
 			self.dataset.remove(k)
 			

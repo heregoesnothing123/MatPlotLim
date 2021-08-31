@@ -5,7 +5,7 @@ from copy import copy
 
 #Test: Load prepared CSV file
 test = KinematicDataset()
-test.construct_from_file('jointKinematics.csv')
+test.construct_from_file('c:\kinematicdata\jointKinematics.csv')
 
 #First, we will copy our dataset and work on that
 print("\n\n")

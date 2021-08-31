@@ -153,9 +153,11 @@ def _total_rotation(dset, hash_set):
 	matching_columns = ['SpecimenNumber','TrialRun','ParentSegment','ChildSegment','Condition','Units']
 	for k in matching_columns:
 		result_element[k] = elements[0][k]
+
 	
 	result_element['Signs'] = 'AbsoluteValue'
 	result_element['Motion'] = 'TotalRotation'
+	result_element['Color'] = None
 	
 	dset.add_element(result_element)
 	

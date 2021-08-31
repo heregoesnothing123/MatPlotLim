@@ -113,8 +113,13 @@ class MatPlotLim:
 		self.UpdateGraph = tk.Button(self.master, text = "Update Graph Titles", command = self.update_graph)
 		self.UpdateGraph.place(x=77, y=yind)
 
+		yind += spacing
+		self.numeric_xform_btn = tk.Button(self.master, text = "Transform Data", command = self.xform_data_window)
+		self.numeric_xform_btn.place(x=77, y=yind)
+
 		self.data_w = None
 		self.graph_w = None
+		self.xform_w = None
 		self.selected_elements=[]
 		self.default_graph_properties = {}
 		self.default_graph_properties['linestyle'] = 'solid'
@@ -253,19 +258,29 @@ class MatPlotLim:
 	def graph_win_close(self):
 		self.graph_w.destroy()
 		self.graph_w = None
+
+	def xform_win_close(self):
+		self.xform_w.destroy()
+		self.xform_w = None
 		
 	def plot_data(self):
 		run = True
 		#clear the old graph
 		while run:
-			ln = self.lineplot.pop(0)
-			ln.remove()
+			x=1
+			try:
+				ln = self.lineplot.pop(0)
+				ln.remove()
+			except IndexError:
+				pass
+
 			if len(self.lineplot) == 0:
 				run = False
 	
 		num_elem = 0
 		#plot the new graph
 		for el in self.dset.dataset:
+			print(el)
 			#we only want to plot elements who's color values are not "None"
 			col = el['Color']
 			if col != "None":
@@ -401,9 +416,11 @@ class MatPlotLim:
 	def add_element_to_plotlist(self):
 		
 		for i in self.graphtree.selection():
+			print(i)
 			self.selected_elements.append(i)
 			element = self.dset.retrieve(i)
 			element['Color'] = self.graph_tkvar.get()
+			print(element)
 			self.dset.remove(i)
 			self.dset.add_element(element)
 
@@ -414,4 +431,41 @@ class MatPlotLim:
 	def setup_textbox(self, txtbox):
 		pass
 
+	def average_data(self):
+		x = 1
+		b = 2
+		c = 3
+
+		average_dataset(self.dset)
+
+	def _total_rotation(self):
+		x=1
+		self.dset.convert_to_rad()
+		get_total_rotation(self.dset)
+
+	def xform_data_window(self):
+
+		dat = self.dset.description
+
+		#we don't want to launch a new window if one exists
+		if self.xform_w == None:
+			#the y-padding for this window
+			pdy = 2
+		
+			self.xform_w = tk.Toplevel(self.master)
+			self.xform_w.protocol("WM_DELETE_WINDOW", self.xform_win_close)
+
+			self.txt_xform_w = tk.Text(self.xform_w, height = 2, width = 60 )
+			self.txt_xform_w.insert(tk.END,dat)
+			self.txt_xform_w.grid(row=0, column = 1, columnspan = 3, sticky = tk.W + tk.E, pady = pdy)
+			
+			lab1 = tk.Label(self.xform_w, text = "Data Description")
+			lab1.grid(row=0, column = 0, columnspan = 1, sticky = tk.W, pady = pdy)
+			
+			self.average_btn_w = tk.Button(self.xform_w, text = "Average Data", command = self.average_data)
+			self.average_btn_w.grid(row=1, column = 0, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+
+			self.tr_btn_w = tk.Button(self.xform_w, text = "Transform to total rotation", command = self._total_rotation)
+			self.tr_btn_w.grid(row=1, column = 1, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
 	
+

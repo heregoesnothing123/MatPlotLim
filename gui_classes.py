@@ -36,9 +36,6 @@ class MatPlotLim:
 		self.xlabel = "X Label"
 		self.ylabel = "Y Label"
 		
-		self.plot1.set_title(self.charttitle)
-		self.plot1.set_ylabel(self.xlabel)
-		self.plot1.set_xlabel(self.ylabel)
 		self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
 		self.canvas.draw()
 		self.canvas.get_tk_widget().pack()
@@ -47,105 +44,81 @@ class MatPlotLim:
 		self.toolbar.update()
 		self.canvas.get_tk_widget().pack()
 		
-		self.b0 = tk.Button(self.master, text = "Select Data", command = self.data_select)
-		self.b0.place(x=7, y=10)
+		spacing = 37
+		yind = 10
 
-		self.b1 = tk.Button(self.master, text = "Plot", command = self.plot_data)
-		self.b1.place(x=87, y=10)
+		self.select_data_btn = tk.Button(self.master, text = "Select Data", command = self.data_select)
+		self.select_data_btn.place(x=77, y=yind)
+		self.select_data_btn.pack
 
-		self.b2 = tk.Button(self.master, text = "Translate", command = self.placeholder)
-		self.b2.place(x=7, y=40)
-
-		#inputs for translation
-		yloc = 70
-		
-		self.Var11 = tk.Text(self.master, height = 2, width = 4)
-		self.Var11.place(x=37, y=70)
-
-		self.Var12 = tk.Text(self.master, height = 2, width = 4)
-		self.Var12.place(x=37, y=120)
-
-		self.Var13 = tk.Text(self.master, height = 2, width = 4)
-		self.Var13.place(x=37, y=170)
-
-		self.txt_title = tk.Text(self.master, height = 2, width = 24, )
-		self.txt_title.insert(tk.END,"Chart Title")
-		self.txt_title.place(x=77, y=227)
-
-		self.txt_xaxis = tk.Text(self.master, height = 2, width = 24 )
-		self.txt_xaxis.insert(tk.END,"X Axis")
-		self.txt_xaxis.place(x=77, y=277)
-
-		self.txt_yaxis = tk.Text(self.master, height = 2, width = 24)
-		self.txt_yaxis.insert(tk.END,"Y axis")
-		self.txt_yaxis.place(x=77, y=327)
-		
-		self.UpdateGraph = tk.Button(self.master, text = "Update Graph", command = self.update_graph)
-		self.UpdateGraph.place(x=77, y=377)
-		
+		#y index to align features
+		yind += spacing
 		#the button to launch the data import window. It needs to be disabled until a datafile is loaded.
 		self.data_config_btn = tk.Button(self.master, text = "Configure Dataset", command = self.data_window)
-		self.data_config_btn.place(x=77, y=427)
+		self.data_config_btn.place(x=77, y=yind)
 		self.data_config_btn.configure(state='disabled')
-		
+
+		yind += spacing
 		#the button to launch the graph setup window. It needs to be disabled until a datafile is loaded.
 		self.graph_config_btn = tk.Button(self.master, text = "Configure Graph", command = self.graph_window)
-		self.graph_config_btn.place(x=77, y=477)
+		self.graph_config_btn.place(x=77, y=yind)
 		self.graph_config_btn.configure(state='disabled')
-				
-		#input theta for rotation
 
-		self.Theta = tk.Text(self.master, height = 2, width = 4)
-		self.Theta.place(x=187, y=70)
+		yind += spacing
+		self.plot_btn = tk.Button(self.master, text = "Plot", command = self.plot_data)
+		self.plot_btn.place(x=77, y=yind)
+		self.plot_btn.pack
 
-		#dropdown menus
-
-		self.tkvar = tk.StringVar(self.master)
-		options = ["Rotate About X", "Rotate About Y", "Rotate About Z"]
-		self.tkvar.set("Click to select Rotation")
-
-		self.popupMenu = tk.OptionMenu(self.master, self.tkvar, *options)
-		self.popupMenu.place(x=137, y = 39)
-
-		self.lbl_theta = tk.Label(self.master,text = "Tx:")
-		self.lbl_theta.place(x = 7, y=77)
-
-		self.lbl_theta = tk.Label(self.master,text = "Ty:")
-		self.lbl_theta.place(x = 7, y=127)
-
-		self.lbl_theta = tk.Label(self.master,text = "Tz:")
-		self.lbl_theta.place(x = 7, y=177)
-
-		self.lbl_theta = tk.Label(self.master,text = "Theta:")
-		self.lbl_theta.place(x = 137, y=77)
-
+		yind += spacing
 		self.lbl_title = tk.Label(self.master,text = "Chart Title:")
-		self.lbl_title.place(x = 7, y=232)
+		self.lbl_title.place(x = 7, y=yind)
 
+		self.txt_title = tk.Text(self.master, height = 1, width = 24, )
+		self.txt_title.insert(tk.END,"Chart Title")
+		self.txt_title.place(x=77, y=yind)
+
+		yind += spacing
 		self.lbl_xaxis = tk.Label(self.master,text = "X Axis Text:")
-		self.lbl_xaxis.place(x = 7, y=282)
+		self.lbl_xaxis.place(x = 7, y=yind)
 
+		self.txt_xaxis = tk.Text(self.master, height = 1, width = 24 )
+		self.txt_xaxis.insert(tk.END,"X Axis")
+		self.txt_xaxis.place(x=77, y=yind)
+
+		yind += spacing
 		self.lbl_yaxis = tk.Label(self.master,text = "Y Axis Text:")
-		self.lbl_yaxis.place(x = 7, y=332)
+		self.lbl_yaxis.place(x = 7, y=yind)
 
-		self.b0.pack
-		self.b1.pack
-		self.b2.pack
-		self.Var11.pack
-		self.Var12.pack
-		self.Var13.pack
-		
+		self.txt_yaxis = tk.Text(self.master, height = 1, width = 24)
+		self.txt_yaxis.insert(tk.END,"Y axis")
+		self.txt_yaxis.place(x=77, y=yind)
+
+		yind += spacing
+		self.lbl_ymaxmin = tk.Label(self.master,text = "Y max,min")
+		self.lbl_ymaxmin.place(x = 7, y=yind)
+
+		self.txt_ymaxmin = tk.Text(self.master, height = 1, width = 24, )
+		self.txt_ymaxmin.insert(tk.END,"")
+		self.txt_ymaxmin.place(x=77, y=yind)
+
+		yind += spacing
+		self.lbl_xmaxmin = tk.Label(self.master,text = "X max,min")
+		self.lbl_xmaxmin.place(x = 7, y=yind)
+
+		self.txt_xmaxmin = tk.Text(self.master, height = 1, width = 24, )
+		self.txt_xmaxmin.insert(tk.END,"")
+		self.txt_xmaxmin.place(x=77, y=yind)
+
+		yind += spacing
+		self.UpdateGraph = tk.Button(self.master, text = "Update Graph Titles", command = self.update_graph)
+		self.UpdateGraph.place(x=77, y=yind)
+
 		self.data_w = None
 		self.graph_w = None
-		
 		self.selected_elements=[]
-
 		self.default_graph_properties = {}
-		#self.default_graph_properties['marker'] = 'o'
 		self.default_graph_properties['linestyle'] = 'solid'
 		self.default_graph_properties['linewidth'] = 3
-		#self.default_graph_properties['markersize'] = 12
-
 		self.color_index = 0
 		self.graph_range = []
 		self.ax_rect = []
@@ -161,6 +134,9 @@ class MatPlotLim:
 		self.plot1.set_xlabel(input)
 		input = self.txt_yaxis.get("1.0","end-1c")
 		self.plot1.set_ylabel(input)
+
+		self.update_graph_range()
+
 		self.fig.canvas.draw()
 		
 	def data_select(self):
@@ -175,7 +151,6 @@ class MatPlotLim:
 			
 		self.data_config_btn.configure(state='normal')
 		self.graph_config_btn.configure(state='normal')
-		
 		
 	def data_window(self):
 
@@ -208,7 +183,6 @@ class MatPlotLim:
 			self.txt_filter_column_w.insert(tk.END,"Filter Column")
 			self.txt_filter_column_w.bind("<Tab>",self.focus_next)
 			self.txt_filter_column_w.grid(row=1, column = 2, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
-			
 			
 			self.txt_filter_text_w = tk.Text(self.data_w, height = 1)
 			self.txt_filter_text_w.insert(tk.END,"Filter Text")
@@ -295,8 +269,7 @@ class MatPlotLim:
 			#we only want to plot elements who's color values are not "None"
 			col = el['Color']
 			if col != "None":
-				if self.ax_rect == []:
-					self.graph_range.append(get_range(self.dset, el['md5']))
+				self.graph_range.append(get_range(self.dset, el['md5']))
 				if num_elem < el['Data'].size:
 					num_elem = el['Data'].size
 				self.lineplot.append(self.plot1.plot(el['Data'], color=col, **self.default_graph_properties))
@@ -312,18 +285,47 @@ class MatPlotLim:
 					tempmin = i[1]
 		
 		self.ax_rect = [0.0, tempmin, num_elem, tempmax]
-		self.graph_range = []
 
-		self.graphaxes_x = self.plot1.set_xlim(self.ax_rect[0], self.ax_rect[2])
-		self.graphaxes_y = self.plot1.set_ylim(self.ax_rect[1], self.ax_rect[3])
+		self.update_graph_range(self.ax_rect)
 
-			
 		self.canvas.draw()
 		
-	def focus_next(event):
+	def focus_next(self, event, **kwargs):
 		#this makes tab move to the next text field. Yes, it's that important to me.
 		event.widget.tk_focusNext().focus()
 		return("break")
+
+	def update_graph_range(self, newrange=[]):
+		#this will check and see if the axes ranges are set. If they are not they will be set to auto range.
+		#newrange is a rectangle with the desired new range. [xmin, ymin, xmax, ymax]
+
+		input = str(self.txt_ymaxmin.get("1.0","end-1c"))
+
+		if input == "" and newrange != []:
+			new_ymin = round(newrange[1]*1.05,1)
+			new_ymax = round(newrange[3]*1.05,1)
+			string = str(new_ymin) + "," + str(new_ymax)
+			self.txt_ymaxmin.insert(1.0,string)
+		else:
+			input = input.split(",")
+			new_ymin = float(input[0].strip())
+			new_ymax = float(input[1].strip())
+
+		self.graphaxes_y = self.plot1.set_ylim(new_ymin, new_ymax)
+
+		input = str(self.txt_xmaxmin.get("1.0","end-1c"))
+		if input == "" and newrange != []:
+			new_xmin = round(newrange[0],1)
+			new_xmax = round(newrange[2],1)
+			string = str(new_xmin) + "," + str(new_xmax)
+			self.txt_xmaxmin.insert(1.0,string)
+		else:
+			input = input.split(",")
+			new_xmin = float(input[0].strip())
+			new_xmax = float(input[1].strip())
+
+		self.graphaxes_x = self.plot1.set_xlim(new_xmin, new_xmax)
+
 		
 	def graph_window(self):
 
@@ -337,7 +339,6 @@ class MatPlotLim:
 		
 			self.graph_w = tk.Toplevel(self.master)
 			self.graph_w.protocol("WM_DELETE_WINDOW", self.graph_win_close)
-			#self.data_w.geometry("600x200")
 			self.g_txt_desc_w = tk.Text(self.graph_w, height = 2, width = 80 )
 			self.g_txt_desc_w.insert(tk.END,dat)
 			
@@ -347,7 +348,7 @@ class MatPlotLim:
 			
 			lab1.grid(row=0, column = 0, columnspan = 1, sticky = tk.W, pady = pdy)
 			
-			self.addgroup_btn_w = tk.Button(self.graph_w, text = "Add Element to Plot", command = self.add_element)
+			self.addgroup_btn_w = tk.Button(self.graph_w, text = "Add Element to Plot", command = self.add_element_to_plotlist)
 			self.addgroup_btn_w.grid(row=1, column = 0, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
 			
 			self.graph_tkvar = tk.StringVar(self.graph_w)
@@ -373,7 +374,6 @@ class MatPlotLim:
 					treecol.append(i)
 
 			#tk.messagebox.showinfo("Debug",treecol)
-				
 			self.graphtree = ttk.Treeview(self.graph_w, columns = treecol, show='headings', height = 30)
 			
 			for k in treecol:
@@ -398,8 +398,7 @@ class MatPlotLim:
 			#next time a different default color! Magic!
 			self.color_index += 1
 
-
-	def add_element(self):
+	def add_element_to_plotlist(self):
 		
 		for i in self.graphtree.selection():
 			self.selected_elements.append(i)
@@ -408,10 +407,11 @@ class MatPlotLim:
 			self.dset.remove(i)
 			self.dset.add_element(element)
 
-		
 		print(self.selected_elements)
 
 		self.draw_graphtree()
 
+	def setup_textbox(self, txtbox):
 		pass
-		#this will be to place highlihgted tree item on plotting list
+
+	

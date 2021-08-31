@@ -1,0 +1,55 @@
+#self.b2 = tk.Button(self.master, text = "Translate", command = self.placeholder)
+		#self.b2.place(x=7, y=40)
+
+		#inputs for translation
+		#yloc = 70
+		
+		#self.Var11 = tk.Text(self.master, height = 2, width = 4)
+		#self.Var11.place(x=37, y=70)
+
+		#self.Var12 = tk.Text(self.master, height = 2, width = 4)
+		#self.Var12.place(x=37, y=120)
+
+		#self.Var13 = tk.Text(self.master, height = 2, width = 4)
+		#self.Var13.place(x=37, y=170)
+
+
+		#input theta for rotation
+
+		#self.Theta = tk.Text(self.master, height = 2, width = 4)
+		#self.Theta.place(x=187, y=70)
+
+		#dropdown menus
+
+		#self.tkvar = tk.StringVar(self.master)
+		#options = ["Rotate About X", "Rotate About Y", "Rotate About Z"]
+		#self.tkvar.set("Click to select Rotation")
+
+		#self.popupMenu = tk.OptionMenu(self.master, self.tkvar, *options)
+		#self.popupMenu.place(x=137, y = 39)
+
+		#self.lbl_theta = tk.Label(self.master,text = "Tx:")
+		#self.lbl_theta.place(x = 7, y=77)
+
+		#self.lbl_theta = tk.Label(self.master,text = "Ty:")
+		#self.lbl_theta.place(x = 7, y=127)
+
+		#self.lbl_theta = tk.Label(self.master,text = "Tz:")
+		#self.lbl_theta.place(x = 7, y=177)
+
+		#self.lbl_theta = tk.Label(self.master,text = "Theta:")
+		#self.lbl_theta.place(x = 137, y=77)
+
+		#self.lbl_title = tk.Label(self.master,text = "Chart Title:")
+		#self.lbl_title.place(x = 7, y=232)
+
+		#self.lbl_xaxis = tk.Label(self.master,text = "X Axis Text:")
+		#self.lbl_xaxis.place(x = 7, y=282)
+
+		#self.lbl_yaxis = tk.Label(self.master,text = "Y Axis Text:")
+		#self.lbl_yaxis.place(x = 7, y=332)
+		#self.b2.pack
+		#self.Var11.pack
+		#self.Var12.pack
+		#self.Var13.pack
+		

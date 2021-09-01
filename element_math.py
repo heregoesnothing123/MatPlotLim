@@ -26,7 +26,6 @@ def average_dataset(dset):
 def _average_elements_by_hash(dset, list_of_hashes):
 	#in place transformation, removes the input hashes
 	#underscore in front of function is Python suggestion to other programmers that you aren't supposed to directly call this function
-	
 	elements = []
 	
 	#dictionary containing the average result
@@ -35,7 +34,7 @@ def _average_elements_by_hash(dset, list_of_hashes):
 	#get the elements that correspond to the input hashes
 	for h in list_of_hashes:
 		elements.append(dset.retrieve(h))
-		dset.remove(h)
+		dset.element_remove(h)
 		
 	#make numpy array of zeros that is same dimension as one of the datasets (will crash if elements don't match size)
 	sh = elements[0]['Data'].shape
@@ -118,7 +117,7 @@ def _total_rotation(dset, hash_set):
 		#this is where hashing isn't great. converting from deg to rad means changing the hash
 		assert (elements[-1]['Units'] == 'Radians'),'Units must be in radians'
 		assert (elements[-1]['Motion'] != 'TotalRotation'), 'TrailRun has already been calculated'
-		dset.remove(h)
+		dset.element_remove(h)
 	
 	n = elements[0]['Data'].size
 	
@@ -157,7 +156,8 @@ def _total_rotation(dset, hash_set):
 	
 	result_element['Signs'] = 'AbsoluteValue'
 	result_element['Motion'] = 'TotalRotation'
-	result_element['Color'] = None
+	#oringinally had the non-string keyword as none. Caused problems.
+	result_element['Color'] = 'None'
 	
 	dset.add_element(result_element)
 	
@@ -166,7 +166,7 @@ def _total_distance(dset, hash):
 	el = dset.retrieve(hash)
 	assert (el['Motion'] == 'TotalRotation'),'Element is not magnitude of rotation format'
 	
-	accumulator = np.longdouble(0.0)
+	accumulator = 0.0
 	
 	for i in range(0,el['Data'].size):
 		accumulator += (el['Data'][i])
@@ -197,3 +197,69 @@ def get_range(dset, hash):
 	max = np.amax(el['Data'])
 	min = np.amin(el['Data'])
 	return [max, min]
+
+def get_dataset_ranges(dset):
+
+	result = []
+	el_range = []
+
+	for el in dset.dataset:
+		el_range = get_range(dset,el['md5'])
+		result.append([el['md5'],el_range[0],el_range[1]])
+	
+	pretty_print(dset,result)
+
+def get_total_distance(dset):
+	#return list of elements with their hashes
+
+	result = []
+
+	for e in dset.dataset:
+		hsh = e['md5']
+		tot_dist = _total_distance(dset,hsh)
+		result.append([hsh,tot_dist])
+
+	pretty_print(dset,result)
+
+def pretty_print(dset, hashlist):
+	#if hashlist is single element, print just the dataset
+	#if hashlist is dual element, don't print data, print whatever is element 2 thru n is instead
+
+	output = []
+	output_string = ""
+
+	col = dset.columns()
+	if 'Color' in col:
+		col.remove('Color')
+	
+	if 'md5' in dset.columns():
+		col.remove('md5')
+
+	if len(hashlist[0]) > 1:
+		extra_data = True
+		col.remove('Data')
+
+	for c in col:
+		output_string = output_string + str(c) + ","
+	output_string.rstrip(",")
+
+	print(output_string)
+
+	for h in hashlist:
+		output_string = ""
+		if extra_data:
+			el = dset.retrieve(h[0])
+		else:
+			el = dset.retrieve(h)
+		for c in col:
+			#print(str(c) + "  " + str(el[c]))
+			output_string = output_string + str(el[c]) + ","
+		if extra_data:
+			for i in range(1,len(h)):
+				output_string = output_string + str(h[i]) + ","
+		output_string.rstrip(",")
+		output_string.rstrip(",")
+		print(output_string)
+
+
+

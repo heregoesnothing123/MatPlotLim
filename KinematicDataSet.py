@@ -102,6 +102,8 @@ class KinematicDataset:
 		temp = []
 		for i in range(0,len(self.column_names)):
 			temp.append(self.column_names[i][0])
+
+		temp.append('Color')
 		self.column_names = temp
 		
 		self.rehash()
@@ -251,18 +253,21 @@ class KinematicDataset:
 			hsh = str(hashlib.md5(str(element['Data']).encode()).hexdigest())
 			element['md5'] = hsh
 			
-	def remove(self, hsh):
-		to_remove = []
+	def element_remove(self, hsh):
+		new_element_list = []
 		
+		old_len = len(self.dataset)
+
 		for i in self.dataset:
+			if i['md5'] != hsh:
+				new_element_list.append(i) #can't edit an iteratable while you're iterating
 
-			if i['md5'] == hsh:
-				to_remove.append(i) #can't edit an iteratable while you're iterating
-		
+		self.dataset = new_element_list
 
-		for k in to_remove:
-			self.dataset.remove(k)
-			
+		new_len = len(self.dataset)
+
+		assert (old_len == new_len + 1),'Reference issue in element remove'
+
 	def retrieve(self, hsh):
 		for i in self.dataset:
 			if i['md5'] == hsh:
@@ -309,6 +314,6 @@ class KinematicDataset:
 		
 		el['Data'] = new_yval
 		
-		self.remove(hsh)
+		self.element_remove(hsh)
 		self.add_element(el)
 		

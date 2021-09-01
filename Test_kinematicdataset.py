@@ -4,7 +4,7 @@ from element_math import *
 
 #Test: Load prepared CSV file
 test = KinematicDataset()
-test.construct_from_file('jointKinematics.csv')
+test.construct_from_file('c:\kinematicdata\jointKinematics.csv')
 
 print("\n\n")
 print("==================================================")

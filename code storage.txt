@@ -40,14 +40,7 @@
 		#self.lbl_theta = tk.Label(self.master,text = "Theta:")
 		#self.lbl_theta.place(x = 137, y=77)
 
-		#self.lbl_title = tk.Label(self.master,text = "Chart Title:")
-		#self.lbl_title.place(x = 7, y=232)
 
-		#self.lbl_xaxis = tk.Label(self.master,text = "X Axis Text:")
-		#self.lbl_xaxis.place(x = 7, y=282)
-
-		#self.lbl_yaxis = tk.Label(self.master,text = "Y Axis Text:")
-		#self.lbl_yaxis.place(x = 7, y=332)
 		#self.b2.pack
 		#self.Var11.pack
 		#self.Var12.pack

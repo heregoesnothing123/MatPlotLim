@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from kinematicdataset import *
 from element_math import *
+from datetime import datetime
 
 
 class MatPlotLim:
@@ -29,7 +30,6 @@ class MatPlotLim:
 		y = [i ** 2 for i in range(30)]
 
 		self.plot1 = self.fig.add_subplot(111)
-		#self.fig.add_axes()
 		self.lineplot = self.plot1.plot(y)
 		
 		self.charttitle = "Chart Title"
@@ -117,6 +117,14 @@ class MatPlotLim:
 		self.numeric_xform_btn = tk.Button(self.master, text = "Transform Data", command = self.xform_data_window)
 		self.numeric_xform_btn.place(x=77, y=yind)
 
+		yind += spacing
+		self.export_all_e_btn = tk.Button(self.master, text = "Export element set", command = self.export_elements)
+		self.export_all_e_btn.place(x=77, y=yind)
+
+		yind += spacing
+		self.export_plot_e_btn = tk.Button(self.master, text = "Export plotted element set", command = self.export_plot_elements)
+		self.export_plot_e_btn.place(x=77, y=yind)
+
 		self.data_w = None
 		self.graph_w = None
 		self.xform_w = None
@@ -168,10 +176,8 @@ class MatPlotLim:
 		
 			self.data_w = tk.Toplevel(self.master)
 			self.data_w.protocol("WM_DELETE_WINDOW", self.data_win_close)
-			#self.data_w.geometry("600x200")
-			self.txt_desc_w = tk.Text(self.data_w, height = 2, width = 60 )
+			self.txt_desc_w = tk.Text(self.data_w, height = 2, width = 40 )
 			self.txt_desc_w.insert(tk.END,dat)
-			
 			self.txt_desc_w.grid(row=0, column = 1, columnspan = 3, sticky = tk.W + tk.E, pady = pdy)
 			
 			lab1 = tk.Label(self.data_w, text = "Data Description")
@@ -193,13 +199,13 @@ class MatPlotLim:
 			self.txt_filter_text_w.insert(tk.END,"Filter Text")
 			self.txt_filter_column_w.bind("<Tab>",self.focus_next)
 			self.txt_filter_text_w.grid(row=1, column = 3, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
-			
-			#this creates the data tree self.tree. Function for updating
+
+			self.fast_filter_btn_w = tk.Button(self.data_w, text = "Tibia/Talus Fast", command = self.fast_filter)
+			self.fast_filter_btn_w.grid(row=1, column = 4, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+
 			self.draw_datatree()
 			
 		else:
-			#this doesn't really work
-			#self.data_w.show()
 			pass
 	
 	def filter_data(self):
@@ -207,23 +213,46 @@ class MatPlotLim:
 		fc = self.txt_filter_column_w.get("1.0",'end-1c')
 		ft = self.txt_filter_text_w.get("1.0",'end-1c')
 		
-		print(fc + ft)
-	
 		if fc == "Filter Column":
 			pass
 		else:
-			
 			self.dset = self.dset.filter(fc,ft)
 			self.txt_desc_w.update()
 			self.draw_datatree()
-			#self.tree.update()
-			#self.data_w.update()
-		#do nothing yet!
-		pass
 		
+	def fast_filter(self):
+		#gets the first line of the text box, omitting the final newline
+		self.dset = self.dset.filter("ParentSegment","Tibia")
+		self.dset = self.dset.filter("ChildSegment","Talus")
+		self.txt_desc_w.update()
+		self.draw_datatree()
+	
 	def remove_data(self):
-		#do nothing yet!
-		pass
+		#gets the first line of the text box, omitting the final newline
+		fc = self.txt_filter_column_w.get("1.0",'end-1c')
+		ft = self.txt_filter_text_w.get("1.0",'end-1c')
+		
+		if fc == "Filter Column":
+			pass
+		else:
+			self.dset = self.dset.filter(fc,ft,keep=False)
+			self.txt_desc_w.update()
+			self.draw_datatree()
+
+	def export_elements(self):
+		current_datetime = datetime.now()
+		formatted_datetime = current_datetime.strftime(r'%d%b%y%H%M%S') + ".txt"
+		f = open(formatted_datetime,'a')
+		for e in self.dset.dataset:
+			f.write(str(e) + "\n")
+
+	def export_plot_elements(self):
+		current_datetime = datetime.now()
+		formatted_datetime = current_datetime.strftime(r'%d%b%y%H%M%S') + ".txt"
+		f = open(formatted_datetime,'a')
+		for e in self.dset.dataset:
+			if e['Color'] != 'None':
+				f.write(str(e) + "\n")
 		
 	def draw_datatree(self):
 			treecol = []
@@ -242,13 +271,13 @@ class MatPlotLim:
 			
 			for e in self.dset.dataset:
 				emod = list(e.values())
-				self.tree.insert('',tk.END,values=emod)
+				self.tree.insert('',tk.END,values=emod,iid=e['md5'])
 				
 			self.tree.grid(row=2, column = 0, columnspan = 5, sticky = 'nsew', pady = 2)
 			
 			treescrl = tk.Scrollbar(self.data_w, orient=tk.VERTICAL, command=self.tree.yview)
 			self.tree.configure(yscroll=treescrl.set)
-			treescrl.grid(row=2, column=4, sticky='ns')
+			treescrl.grid(row=2, column=5, sticky='ns')
 	
 	#if we close a window, the class still contains the window state. I don't know how to reshow the window, so instead we'll destroy the window so we can launch it again.
 	def data_win_close(self):
@@ -273,6 +302,8 @@ class MatPlotLim:
 				ln.remove()
 			except IndexError:
 				pass
+			except TypeError:
+				pass
 
 			if len(self.lineplot) == 0:
 				run = False
@@ -280,7 +311,7 @@ class MatPlotLim:
 		num_elem = 0
 		#plot the new graph
 		for el in self.dset.dataset:
-			print(el)
+			#print(el)
 			#we only want to plot elements who's color values are not "None"
 			col = el['Color']
 			if col != "None":
@@ -317,8 +348,8 @@ class MatPlotLim:
 		input = str(self.txt_ymaxmin.get("1.0","end-1c"))
 
 		if input == "" and newrange != []:
-			new_ymin = round(newrange[1]*1.05,1)
-			new_ymax = round(newrange[3]*1.05,1)
+			new_ymin = round(newrange[1]*1.05,5)
+			new_ymax = round(newrange[3]*1.05,5)
 			string = str(new_ymin) + "," + str(new_ymax)
 			self.txt_ymaxmin.insert(1.0,string)
 		else:
@@ -330,8 +361,8 @@ class MatPlotLim:
 
 		input = str(self.txt_xmaxmin.get("1.0","end-1c"))
 		if input == "" and newrange != []:
-			new_xmin = round(newrange[0],1)
-			new_xmax = round(newrange[2],1)
+			new_xmin = round(newrange[0],5)
+			new_xmax = round(newrange[2],5)
 			string = str(new_xmin) + "," + str(new_xmax)
 			self.txt_xmaxmin.insert(1.0,string)
 		else:
@@ -405,7 +436,7 @@ class MatPlotLim:
 				
 			self.graphtree.grid(row=2, column = 0, columnspan = 5,sticky = 'nsew', pady = 2)
 			
-			treescrl = tk.Scrollbar(self.graph_w, orient=tk.VERTICAL, command=self.tree.yview)
+			treescrl = tk.Scrollbar(self.graph_w, orient=tk.VERTICAL, command=self.graphtree.yview)
 			self.graphtree.configure(yscroll=treescrl.set)
 			treescrl.grid(row=2, column=5, sticky='ns')
 
@@ -421,7 +452,7 @@ class MatPlotLim:
 			element = self.dset.retrieve(i)
 			element['Color'] = self.graph_tkvar.get()
 			print(element)
-			self.dset.remove(i)
+			self.dset.element_remove(i)
 			self.dset.add_element(element)
 
 		print(self.selected_elements)

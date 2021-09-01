@@ -51,6 +51,10 @@ class MatPlotLim:
 		self.select_data_btn.place(x=77, y=yind)
 		self.select_data_btn.pack
 
+		self.select_data2_btn = tk.Button(self.master, text = "Select Secondary Data", command = self.placeholder)
+		self.select_data2_btn.place(x=177, y=yind)
+		self.select_data2_btn.pack
+
 		#y index to align features
 		yind += spacing
 		#the button to launch the data import window. It needs to be disabled until a datafile is loaded.
@@ -155,6 +159,10 @@ class MatPlotLim:
 	def data_select(self):
 		fn = fd.askopenfilename(initialdir='C:\kinematicdata')
 		#tk.messagebox.showinfo("Debug",fn)
+
+		if fn == '':
+			return "blank"
+
 		self.dset.construct_from_file(fn)
 
 		#using dictionaries are great. We can add keys on the fly
@@ -397,13 +405,21 @@ class MatPlotLim:
 			self.addgroup_btn_w = tk.Button(self.graph_w, text = "Add Element to Plot", command = self.add_element_to_plotlist)
 			self.addgroup_btn_w.grid(row=1, column = 0, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
 			
-			self.graph_tkvar = tk.StringVar(self.graph_w)
+			self.graph_color_options = tk.StringVar(self.graph_w)
 			self.color_options = ["Red", "Green", "Blue", "Black", "Yellow", "Orange", "Purple", "Grey", "Pink"]
-			self.graph_tkvar.set(self.color_options[self.color_index])
+			self.graph_color_options.set(self.color_options[self.color_index])
+			self.color_select = tk.OptionMenu(self.graph_w, self.graph_color_options, *self.color_options)
+			self.color_select.grid(row=1, column = 1, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
 
-			self.color_select = tk.OptionMenu(self.graph_w, self.graph_tkvar, *self.color_options)
-			self.color_select.grid(row=1, column = 1, columnspan = 2, sticky = tk.W + tk.E, pady = pdy)
+			self.graph_line_options = tk.StringVar(self.graph_w)
+			self.line_options = ["solid", "dashed", "dashdot", "dotted"]
+			self.graph_line_options.set(self.line_options[0])
+			self.line_select = tk.OptionMenu(self.graph_w, self.graph_line_options, *self.line_options)
+			self.line_select.grid(row=1, column = 2, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
 			
+			self.remgroup_btn_w = tk.Button(self.graph_w, text = "Remove Element from Plot", command = self.rem_element_from_plotlist)
+			self.remgroup_btn_w.grid(row=1, column = 3, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
+
 			#this creates the data tree self.tree. Function for updating
 			self.draw_graphtree()
 			
@@ -423,7 +439,10 @@ class MatPlotLim:
 			self.graphtree = ttk.Treeview(self.graph_w, columns = treecol, show='headings', height = 30)
 			
 			for k in treecol:
-				self.graphtree.column(k, width=60)
+				if k != 'Formatting':
+					self.graphtree.column(k, width=60)
+				else:
+					self.graphtree.column(k, width=160)
 			
 			for c in treecol:
 				self.graphtree.heading(c, text=c)
@@ -433,6 +452,10 @@ class MatPlotLim:
 				for c in treecol:
 					emod.append(e[c])
 				self.graphtree.insert('',tk.END,values=emod, iid=e['md5'])
+				if e['Color'] != "None":
+					self.graphtree.item(e['md5'],tag='plotted')
+
+			self.graphtree.tag_configure('plotted',background='#B5DAFE')
 				
 			self.graphtree.grid(row=2, column = 0, columnspan = 5,sticky = 'nsew', pady = 2)
 			
@@ -440,23 +463,33 @@ class MatPlotLim:
 			self.graphtree.configure(yscroll=treescrl.set)
 			treescrl.grid(row=2, column=5, sticky='ns')
 
-			self.graph_tkvar.set(self.color_options[self.color_index])
+			self.graph_color_options.set(self.color_options[self.color_index])
 			#next time a different default color! Magic!
 			self.color_index += 1
 
 	def add_element_to_plotlist(self):
 		
 		for i in self.graphtree.selection():
-			print(i)
+			#print(i)
 			self.selected_elements.append(i)
 			element = self.dset.retrieve(i)
-			element['Color'] = self.graph_tkvar.get()
-			print(element)
+			element['Color'] = self.graph_color_options.get()
+			#print(element)
 			self.dset.element_remove(i)
 			self.dset.add_element(element)
-
-		print(self.selected_elements)
-
+		self.draw_graphtree()
+	
+	def rem_element_from_plotlist(self):
+		
+		for i in self.graphtree.selection():
+			#print(i)
+			if i in self.selected_elements:
+				self.selected_elements.remove(i)
+			element = self.dset.retrieve(i)
+			element['Color'] = 'None'
+			#print(element)
+			self.dset.element_remove(i)
+			self.dset.add_element(element)
 		self.draw_graphtree()
 
 	def setup_textbox(self, txtbox):

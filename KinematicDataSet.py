@@ -278,7 +278,8 @@ class KinematicDataset:
 		hsh = str(hashlib.md5(str(el['Data']).encode()).hexdigest())
 		el['md5'] = hsh
 		
-		self.dataset.append(el)
+		#this used to be append, but I want transformed elements to appear at the top of the list
+		self.dataset.insert(0,el)
 
 	def convert_to_rad(self):
 		#convert all degrees to radians

@@ -24,26 +24,8 @@ class MatPlotLim:
 		self.graph_frame = tk.Frame(self.master)
 		self.graph_frame.place(relx=0.4, rely=0.05, relheight=0.95, relwidth=0.6)
 		
-		self.fig = Figure(figsize=(11,10))
-		
-		#placeholder plot
-		y = [i ** 2 for i in range(30)]
+		self._set_chart_defaults()
 
-		self.plot1 = self.fig.add_subplot(111)
-		self.lineplot = self.plot1.plot(y)
-		
-		self.charttitle = "Chart Title"
-		self.xlabel = "X Label"
-		self.ylabel = "Y Label"
-		
-		self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
-		self.canvas.draw()
-		self.canvas.get_tk_widget().pack()
-		
-		self.toolbar = NavigationToolbar2Tk(self.canvas, self.graph_frame)
-		self.toolbar.update()
-		self.canvas.get_tk_widget().pack()
-		
 		spacing = 37
 		yind = 10
 
@@ -133,12 +115,9 @@ class MatPlotLim:
 		self.graph_w = None
 		self.xform_w = None
 		self.selected_elements=[]
-		self.default_graph_properties = {}
-		self.default_graph_properties['linestyle'] = 'solid'
-		self.default_graph_properties['linewidth'] = 3
+
 		self.color_index = 0
-		self.graph_range = []
-		self.ax_rect = []
+
 		
 	def placeholder(self):
 		#do nothing!
@@ -531,5 +510,31 @@ class MatPlotLim:
 
 			self.tr_btn_w = tk.Button(self.xform_w, text = "Transform to total rotation", command = self._total_rotation)
 			self.tr_btn_w.grid(row=1, column = 1, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
-	
+
+	def _set_chart_defaults(self):
+		self.fig = Figure(figsize=(11,10))
+		
+		#placeholder plot
+		y = [i ** 2 for i in range(30)]
+
+		self.plot1 = self.fig.add_subplot(111)
+		self.lineplot = self.plot1.plot(y)
+		
+		self.charttitle = "Chart Title"
+		self.xlabel = "X Label"
+		self.ylabel = "Y Label"
+		
+		self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
+		self.canvas.draw()
+		self.canvas.get_tk_widget().pack()
+		
+		self.toolbar = NavigationToolbar2Tk(self.canvas, self.graph_frame)
+		self.toolbar.update()
+		self.canvas.get_tk_widget().pack()
+		self.default_graph_properties = {}
+		self.default_graph_properties['linestyle'] = 'solid'
+		self.default_graph_properties['linewidth'] = 3
+		self.graph_range = []
+		self.ax_rect = []
+
 

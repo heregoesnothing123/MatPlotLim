@@ -139,6 +139,9 @@ class MatPlotLim:
 		self.color_index = 0
 		self.graph_range = []
 		self.ax_rect = []
+
+		self.verticallines = [25.0,50.0,75.0]
+		self.verticalline_annotation = ['HS', 'FF', 'TO']
 		
 	def placeholder(self):
 		#do nothing!
@@ -301,8 +304,11 @@ class MatPlotLim:
 		self.xform_w = None
 		
 	def plot_data(self):
-		run = True
+
 		#clear the old graph
+		run = True
+		if len(self.lineplot) == 0:
+			run = False
 		while run:
 			x=1
 			try:
@@ -312,11 +318,11 @@ class MatPlotLim:
 				pass
 			except TypeError:
 				pass
-
 			if len(self.lineplot) == 0:
 				run = False
 	
 		num_elem = 0
+
 		#plot the new graph
 		for el in self.dset.dataset:
 			#print(el)
@@ -328,6 +334,7 @@ class MatPlotLim:
 					num_elem = el['Data'].size
 				self.lineplot.append(self.plot1.plot(el['Data'], color=col, **self.default_graph_properties))
 
+		#auto set ranges from our data
 		tempmax = self.graph_range[0][0]
 		tempmin = self.graph_range[0][1]
 
@@ -342,7 +349,17 @@ class MatPlotLim:
 
 		self.update_graph_range(self.ax_rect)
 
+		self.draw_graph_annotations()
+
 		self.canvas.draw()
+
+	
+	def draw_graph_annotations(self):
+
+		#draw vertical lines
+		for i in range(0,len(self.verticallines)):
+			self.plot1.axvline(x=self.verticallines[i], linestyle='dashed', color='grey')
+			self.plot1.annotate(text=self.verticalline_annotation[i], xy=(self.verticallines[i], 10.0), ha='center', backgroundcolor='w')
 		
 	def focus_next(self, event, **kwargs):
 		#this makes tab move to the next text field. Yes, it's that important to me.

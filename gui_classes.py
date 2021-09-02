@@ -511,6 +511,18 @@ class MatPlotLim:
 			self.tr_btn_w = tk.Button(self.xform_w, text = "Transform to total rotation", command = self._total_rotation)
 			self.tr_btn_w.grid(row=1, column = 1, columnspan = 1, sticky = tk.W + tk.E, pady = pdy)
 
+	def draw_graph_annotations(self):
+		#draw vertical lines
+
+		axes = self.fig.gca()
+		cur_ymin, cur_ymax = axes.get_ylim()
+		cur_ymax *= 0.99
+
+		for i in range(0,len(self.verticallines)):
+			self.plot1.axvline(x=self.verticallines[i], linestyle='dashed', color='grey')
+
+			self.plot1.annotate(text=self.verticalline_annotation[i], xy=(self.verticallines[i], cur_ymax), ha='center', va='top', backgroundcolor='w')		
+
 	def _set_chart_defaults(self):
 		self.fig = Figure(figsize=(11,10))
 		
@@ -536,5 +548,10 @@ class MatPlotLim:
 		self.default_graph_properties['linewidth'] = 3
 		self.graph_range = []
 		self.ax_rect = []
+
+		self.verticallines = [25.0,50.0,75.0]
+		self.verticalline_annotation = ['HS', 'FF', 'TO']
+
+		self.draw_graph_annotations()
 
 

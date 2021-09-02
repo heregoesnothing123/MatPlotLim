@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from kinematicdataset import *
 from element_math import *
+from plot_class import *
 from datetime import datetime
-
 
 class MatPlotLim:
 
@@ -22,27 +22,8 @@ class MatPlotLim:
 		self.w = self.master.winfo_width()
 		
 		self.graph_frame = tk.Frame(self.master)
-		self.graph_frame.place(relx=0.4, rely=0.05, relheight=0.95, relwidth=0.6)
-		
-		self.fig = Figure(figsize=(11,10))
-		
-		#placeholder plot
-		y = [i ** 2 for i in range(30)]
-
-		self.plot1 = self.fig.add_subplot(111)
-		self.lineplot = self.plot1.plot(y)
-		
-		self.charttitle = "Chart Title"
-		self.xlabel = "X Label"
-		self.ylabel = "Y Label"
-		
-		self.canvas = FigureCanvasTkAgg(self.fig, master=self.graph_frame)
-		self.canvas.draw()
-		self.canvas.get_tk_widget().pack()
-		
-		self.toolbar = NavigationToolbar2Tk(self.canvas, self.graph_frame)
-		self.toolbar.update()
-		self.canvas.get_tk_widget().pack()
+		#iplot is an instance of our new plot class
+		self.iplot = KinematicPlot(self.graph_frame)
 		
 		spacing = 37
 		yind = 10
@@ -133,32 +114,16 @@ class MatPlotLim:
 		self.graph_w = None
 		self.xform_w = None
 		self.selected_elements=[]
-		self.default_graph_properties = {}
-		self.default_graph_properties['linestyle'] = 'solid'
-		self.default_graph_properties['linewidth'] = 3
-		self.color_index = 0
-		self.graph_range = []
-		self.ax_rect = []
 
-		self.verticallines = [25.0,50.0,75.0]
-		self.verticalline_annotation = ['HS', 'FF', 'TO']
+		self.color_index = 0
+
 		
 	def placeholder(self):
 		#do nothing!
 		pass
 	
 	def update_graph(self):
-		input = self.txt_title.get("1.0","end-1c")
-		self.plot1.set_title(input)
-		input = self.txt_xaxis.get("1.0","end-1c")
-		self.plot1.set_xlabel(input)
-		input = self.txt_yaxis.get("1.0","end-1c")
-		self.plot1.set_ylabel(input)
 
-		self.update_graph_range()
-
-		self.fig.canvas.draw()
-		
 	def data_select(self):
 		fn = fd.askopenfilename(initialdir='C:\kinematicdata')
 		#tk.messagebox.showinfo("Debug",fn)
@@ -305,34 +270,18 @@ class MatPlotLim:
 		
 	def plot_data(self):
 
-		#clear the old graph
-		run = True
-		if len(self.lineplot) == 0:
-			run = False
-		while run:
-			x=1
-			try:
-				ln = self.lineplot.pop(0)
-				ln.remove()
-			except IndexError:
-				pass
-			except TypeError:
-				pass
-			if len(self.lineplot) == 0:
-				run = False
-	
+		self.iplot.clear_graph()
+
 		num_elem = 0
 
 		#plot the new graph
 		for el in self.dset.dataset:
-			#print(el)
 			#we only want to plot elements who's color values are not "None"
 			col = el['Color']
 			if col != "None":
-				self.graph_range.append(get_range(self.dset, el['md5']))
 				if num_elem < el['Data'].size:
 					num_elem = el['Data'].size
-				self.lineplot.append(self.plot1.plot(el['Data'], color=col, **self.default_graph_properties))
+				self.iplot.lineplot.append(self.iplot.plot1.plot(el['Data'], color=col, **self.default_graph_properties))
 
 		#auto set ranges from our data
 		tempmax = self.graph_range[0][0]
@@ -354,50 +303,13 @@ class MatPlotLim:
 		self.canvas.draw()
 
 	
-	def draw_graph_annotations(self):
 
-		#draw vertical lines
-		for i in range(0,len(self.verticallines)):
-			self.plot1.axvline(x=self.verticallines[i], linestyle='dashed', color='grey')
-			self.plot1.annotate(text=self.verticalline_annotation[i], xy=(self.verticallines[i], 10.0), ha='center', backgroundcolor='w')
 		
 	def focus_next(self, event, **kwargs):
 		#this makes tab move to the next text field. Yes, it's that important to me.
 		event.widget.tk_focusNext().focus()
 		return("break")
 
-	def update_graph_range(self, newrange=[]):
-		#this will check and see if the axes ranges are set. If they are not they will be set to auto range.
-		#newrange is a rectangle with the desired new range. [xmin, ymin, xmax, ymax]
-
-		input = str(self.txt_ymaxmin.get("1.0","end-1c"))
-
-		if input == "" and newrange != []:
-			new_ymin = round(newrange[1]*1.05,5)
-			new_ymax = round(newrange[3]*1.05,5)
-			string = str(new_ymin) + "," + str(new_ymax)
-			self.txt_ymaxmin.insert(1.0,string)
-		else:
-			input = input.split(",")
-			new_ymin = float(input[0].strip())
-			new_ymax = float(input[1].strip())
-
-		self.graphaxes_y = self.plot1.set_ylim(new_ymin, new_ymax)
-
-		input = str(self.txt_xmaxmin.get("1.0","end-1c"))
-		if input == "" and newrange != []:
-			new_xmin = round(newrange[0],5)
-			new_xmax = round(newrange[2],5)
-			string = str(new_xmin) + "," + str(new_xmax)
-			self.txt_xmaxmin.insert(1.0,string)
-		else:
-			input = input.split(",")
-			new_xmin = float(input[0].strip())
-			new_xmax = float(input[1].strip())
-
-		self.graphaxes_x = self.plot1.set_xlim(new_xmin, new_xmax)
-
-		
 	def graph_window(self):
 
 		dat = self.dset.description

@@ -552,6 +552,6 @@ class MatPlotLim:
 		self.verticallines = [25.0,50.0,75.0]
 		self.verticalline_annotation = ['HS', 'FF', 'TO']
 
-		self.draw_graph_annotations()
+		#self.draw_graph_annotations()
 
 
